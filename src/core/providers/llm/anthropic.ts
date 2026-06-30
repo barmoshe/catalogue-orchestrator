@@ -21,7 +21,7 @@ export class AnthropicLlm implements LlmProvider {
   }
 
   async completeJson<T>(args: {
-    schema: import("zod").ZodType<T>;
+    schema: import("zod").ZodType<T, import("zod").ZodTypeDef, unknown>;
     schemaName: string;
     schemaDescription?: string;
     system: string;

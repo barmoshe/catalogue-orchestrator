@@ -34,7 +34,7 @@ export interface LlmProvider {
    * `schema.safeParse` and re-prompt on failure. The caller never sees raw text.
    */
   completeJson<T>(args: {
-    schema: z.ZodType<T>;
+    schema: z.ZodType<T, z.ZodTypeDef, unknown>;
     schemaName: string;
     schemaDescription?: string;
     system: string;

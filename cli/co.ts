@@ -13,7 +13,8 @@ import { getProviders } from "../src/core/providers/index.js";
 import { buildIndex, getStore } from "../src/core/index/embed.js";
 import { retrieve } from "../src/core/retrieve/retrieve.js";
 import { orchestrate } from "../src/core/orchestrate/orchestrate.js";
-import { writeFileSync } from "node:fs";
+import { compileEdl } from "../src/core/compile/compile.js";
+import { writeFileSync, readFileSync } from "node:fs";
 
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -29,13 +30,45 @@ async function main() {
     case "plan":
       return cmdPlan(rest);
     case "render":
-      console.error("'render' lands in Phase 4 (compile).");
-      process.exit(2);
-      break;
+      return cmdRender(rest);
+    case "auto":
+      return cmdAuto(rest);
     default:
-      console.error("usage: co <ingest|list|index|search|plan|render> [args]");
+      console.error("usage: co <ingest|list|index|search|plan|render|auto> [args]");
       process.exit(2);
   }
+}
+
+async function cmdRender(args: string[]) {
+  const file = args.find((a) => !a.startsWith("--"));
+  if (!file) { console.error("usage: co render <edl.json> [--out out.mp4]"); process.exit(2); }
+  const out = args.indexOf("--out") >= 0 ? args[args.indexOf("--out") + 1] : undefined;
+  const edl = JSON.parse(readFileSync(file, "utf8"));
+  const info = await compileEdl(edl, { outFile: out, onProgress: progressLine });
+  process.stdout.write("\n");
+  console.log(`rendered: ${info.outFile}  ${info.width}x${info.height}  ${(info.durationSec ?? 0).toFixed(2)}s  audio:${info.hasAudio}`);
+}
+
+async function cmdAuto(args: string[]) {
+  // co auto [highlights|assembly] [query...] [--aspect] [--max] [--asset] [--out out.mp4]
+  const mode = args[0] === "assembly" ? "assembly" : "highlights";
+  const opt = (n: string) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
+  const flags = new Set(["--aspect", "--max", "--asset", "--out", "--feedback"]);
+  const query = args.slice(1).filter((a, i, arr) => !a.startsWith("--") && !flags.has(arr[i - 1])).join(" ");
+  const intent = { mode, query, aspect: (opt("--aspect") as "9:16" | "1:1" | "16:9") || "9:16", maxDurationSec: opt("--max") ? Number(opt("--max")) : 20, assetId: opt("--asset"), feedback: opt("--feedback") };
+  const { edl, planner, candidateCount } = await orchestrate(intent);
+  console.log(`planned via ${planner} from ${candidateCount} candidates → ${edl.clips.length} clips`);
+  const info = await compileEdl(edl, { outFile: opt("--out"), onProgress: progressLine });
+  process.stdout.write("\n");
+  console.log(`rendered: ${info.outFile}  ${info.width}x${info.height}  ${(info.durationSec ?? 0).toFixed(2)}s  audio:${info.hasAudio}`);
+}
+
+let lastPct = -1;
+function progressLine(p: { stage: string; index: number; total: number; pct: number }) {
+  const overall = Math.round(((p.index + p.pct) / p.total) * 100);
+  if (overall === lastPct) return;
+  lastPct = overall;
+  process.stdout.write(`\r  rendering ${overall}%  (${p.stage} ${p.index + 1}/${p.total})   `);
 }
 
 async function cmdPlan(args: string[]) {
