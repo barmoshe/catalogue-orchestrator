@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Catalogue Orchestrator — a local-first AI video orchestrator</title>
+  <meta name="description" content="A catalogue of media plus an intent becomes an AI-planned, schema-validated Edit Decision List that a deterministic ffmpeg compiler renders into a finished cut. Local-first, domain-agnostic, runs with no API keys." />
+  <meta property="og:title" content="Catalogue Orchestrator" />
+  <meta property="og:description" content="Catalogue + intent → AI-planned EDL → deterministic ffmpeg cut. One engine, two modes, runs with no API keys." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:        oklch(0.15 0.022 260);
+      --bg-2:      oklch(0.18 0.026 260);
+      --surface:   oklch(0.22 0.03 260);
+      --surface-2: oklch(0.27 0.034 260);
+      --border:    oklch(0.34 0.035 260);
+      --ink:       oklch(0.96 0.012 260);
+      --muted:     oklch(0.74 0.022 260);
+      --faint:     oklch(0.58 0.02 260);
+      --teal:      oklch(0.80 0.14 195);
+      --teal-deep: oklch(0.62 0.13 200);
+      --violet:    oklch(0.74 0.16 320);
+      --amber:     oklch(0.82 0.13 75);
+      --good:      oklch(0.80 0.16 150);
+      --radius: 16px;
+      --maxw: 1080px;
+      --sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 700px at 78% -8%, oklch(0.30 0.06 320 / 0.30), transparent 60%),
+        radial-gradient(1000px 700px at 0% 18%, oklch(0.30 0.06 200 / 0.26), transparent 55%),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--teal); text-decoration: none; }
+
+    /* progress + nav */
+    .progress {
+      position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 50;
+      background: linear-gradient(90deg, var(--teal), var(--violet));
+      transform-origin: 0 50%; transform: scaleX(0);
+      transition: transform .15s linear;
+    }
+    .dots {
+      position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 12px; z-index: 40;
+    }
+    .dots button {
+      width: 11px; height: 11px; border-radius: 50%; padding: 0; cursor: pointer;
+      border: 1.5px solid var(--faint); background: transparent; transition: all .2s;
+    }
+    .dots button[aria-current="true"] { background: var(--teal); border-color: var(--teal); transform: scale(1.25); }
+    .brandmark {
+      position: fixed; left: 24px; top: 20px; z-index: 40;
+      display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .2px;
+      font-size: 14px;
+    }
+    .brandmark .glyph {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: linear-gradient(135deg, var(--teal), var(--violet));
+      display: grid; place-items: center; color: oklch(0.16 0.03 260); font-weight: 700;
+      box-shadow: 0 6px 18px oklch(0.62 0.13 260 / .35);
+    }
+    .repolink {
+      position: fixed; left: 24px; bottom: 18px; z-index: 40; font-size: 13px;
+      font-family: var(--mono); color: var(--muted);
+      border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px;
+      background: oklch(0.2 0.03 260 / .6); backdrop-filter: blur(6px);
+    }
+    .repolink:hover { color: var(--ink); border-color: var(--teal); }
+
+    /* slides */
+    main { scroll-snap-type: y proximity; }
+    .slide {
+      min-height: 100svh; scroll-snap-align: start;
+      display: grid; place-items: center; padding: 92px 24px 64px;
+      position: relative;
+    }
+    .wrap { width: 100%; max-width: var(--maxw); }
+    .eyebrow {
+      font-family: var(--mono); font-size: 12.5px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--teal); margin: 0 0 14px;
+    }
+    h1 { font-size: clamp(38px, 7vw, 82px); line-height: 1.02; margin: 0; font-weight: 700; letter-spacing: -1.5px; }
+    h2 { font-size: clamp(28px, 4.4vw, 48px); line-height: 1.08; margin: 0 0 18px; font-weight: 600; letter-spacing: -1px; }
+    .lead { font-size: clamp(17px, 2.1vw, 22px); color: var(--muted); max-width: 64ch; }
+    .grad { background: linear-gradient(105deg, var(--teal), var(--violet) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+    .reveal.d1 { transition-delay: .08s; } .reveal.d2 { transition-delay: .16s; }
+    .reveal.d3 { transition-delay: .24s; } .reveal.d4 { transition-delay: .32s; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12.5px;
+      color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px;
+      background: oklch(0.2 0.03 260 / .5);
+    }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    /* hero canvas */
+    .hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
+    .stage {
+      aspect-ratio: 16 / 11; width: 100%; border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--bg-2), oklch(0.13 0.02 260));
+      border: 1px solid var(--border); overflow: hidden; position: relative;
+      box-shadow: 0 30px 70px oklch(0.1 0.03 260 / .6);
+    }
+    .stage canvas { width: 100%; height: 100%; display: block; }
+
+    /* pipeline */
+    .pipe { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 14px; }
+    .node {
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px 14px; background: var(--surface);
+      position: relative;
+    }
+    .node .k { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; color: var(--teal); text-transform: uppercase; }
+    .node .t { font-weight: 600; margin-top: 6px; font-size: 15px; }
+    .node .d { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .node.ai { border-color: oklch(0.5 0.12 320 / .8); box-shadow: inset 0 0 0 1px oklch(0.6 0.16 320 / .25); }
+    .node.det { border-color: oklch(0.5 0.1 200 / .8); box-shadow: inset 0 0 0 1px oklch(0.62 0.13 200 / .25); }
+
+    /* generic cards */
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; background: var(--surface);
+      transition: transform .3s, border-color .3s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: var(--teal); }
+    .card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+    .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+    .card .ic { font-family: var(--mono); color: var(--teal); font-size: 13px; letter-spacing: 1px; }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; background: var(--surface); }
+    .panel.ai { background: linear-gradient(180deg, oklch(0.24 0.04 320 / .5), var(--surface)); border-color: oklch(0.5 0.12 320 / .6); }
+    .panel.det { background: linear-gradient(180deg, oklch(0.22 0.04 200 / .5), var(--surface)); border-color: oklch(0.5 0.1 200 / .6); }
+    .panel .tag { font-family: var(--mono); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; }
+    .panel.ai .tag { color: var(--violet); } .panel.det .tag { color: var(--teal); }
+
+    code, pre { font-family: var(--mono); }
+    pre {
+      background: oklch(0.12 0.02 260); border: 1px solid var(--border); border-radius: 12px;
+      padding: 18px; overflow-x: auto; font-size: 13px; line-height: 1.6; color: var(--ink); margin: 0;
+    }
+    .tok-key { color: var(--teal); } .tok-str { color: var(--amber); } .tok-com { color: var(--faint); }
+
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .mode { border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; background: var(--surface); }
+    .mode .big { font-size: 13px; font-family: var(--mono); letter-spacing: 2px; text-transform: uppercase; color: var(--teal); }
+    .mode h3 { font-size: 24px; margin: 8px 0 10px; }
+    .mode .flow { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 14px; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--surface); text-align: center; }
+    .stat .n { font-size: 30px; font-weight: 700; }
+    .stat .l { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    .cta {
+      display: inline-flex; align-items: center; gap: 10px; margin-top: 22px;
+      background: linear-gradient(105deg, var(--teal), var(--violet)); color: oklch(0.15 0.03 260);
+      font-weight: 700; font-size: 16px; padding: 14px 26px; border-radius: 12px;
+      box-shadow: 0 16px 40px oklch(0.6 0.13 280 / .35); transition: transform .2s;
+    }
+    .cta:hover { transform: translateY(-2px); }
+    .cta.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); box-shadow: none; }
+
+    .foot { text-align: center; color: var(--faint); font-size: 13px; margin-top: 30px; font-family: var(--mono); }
+
+    /* flow diagram: video/text -> engine -> edited video */
+    .flowsvg { width: 100%; height: auto; display: block; }
+    .flowsvg .card { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+    .flowsvg .card.io-v { stroke: var(--teal-deep); }
+    .flowsvg .card.io-t { stroke: var(--violet); }
+    .flowsvg .engine { fill: url(#engGrad); stroke: var(--teal); stroke-width: 1.5; }
+    .flowsvg .out { fill: var(--bg-2); stroke: var(--teal); stroke-width: 2; }
+    .flowsvg .lbl { fill: var(--ink); font-family: var(--sans); font-weight: 600; }
+    .flowsvg .sub { fill: var(--muted); font-family: var(--mono); }
+    .flowsvg .chip { fill: oklch(0.2 0.03 260 / .8); stroke: var(--border); }
+    .flowsvg .chipt { fill: var(--teal); font-family: var(--mono); font-weight: 500; }
+    .flowsvg .glyph { fill: var(--ink); opacity: .9; }
+    .flowsvg .thumb-v { fill: var(--teal-deep); opacity: .8; }
+    .flowsvg .thumb-t { fill: var(--violet); opacity: .55; }
+    .flowsvg .conn { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .flowsvg .conn.v { stroke: var(--teal-deep); }
+    .flowsvg .conn.t { stroke: var(--violet); }
+    .flowsvg .conn.o { stroke: var(--teal); }
+    .flowsvg .flow { stroke-dasharray: 5 11; animation: dash 1.1s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -32; } }
+    .flowsvg .pulse { animation: pulse 2.6s ease-in-out infinite; transform-origin: center; }
+    @keyframes pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+    @media (max-width: 860px) {
+      .hero-grid, .two { grid-template-columns: 1fr; }
+      .pipe { grid-template-columns: repeat(2, 1fr); }
+      .cards { grid-template-columns: 1fr; }
+      .modes { grid-template-columns: 1fr; }
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+      .dots { display: none; }
+      .stage { order: -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <a class="brandmark" href="#s1"><span class="glyph">CO</span> Catalogue Orchestrator</a>
+  <a class="repolink" href="https://github.com/barmoshe/catalogue-orchestrator" target="_blank" rel="noopener">↗ github.com/barmoshe/catalogue-orchestrator</a>
+  <nav class="dots" id="dots" aria-label="Slides"></nav>
+
+  <main>
+    <!-- 1 — HERO -->
+    <section class="slide" id="s1">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow reveal">Local-first · domain-agnostic · open source</p>
+          <h1 class="reveal d1">The AI plans the edit.<br /><span class="grad">The compiler renders it.</span></h1>
+          <p class="lead reveal d2" style="margin-top:22px">
+            Point <b>Catalogue Orchestrator</b> at a folder of media and an intent. It indexes everything into
+            rich cards, retrieves the right moments with RAG, and an AI authors a schema-validated
+            <b>Edit Decision List</b> — which a deterministic ffmpeg compiler turns into a finished MP4.
+          </p>
+          <div class="row reveal d3" style="margin-top:24px">
+            <span class="pill"><span class="dot"></span> Runs with no API keys</span>
+            <span class="pill">Two modes · one engine</span>
+          </div>
+          <div class="row reveal d4" style="margin-top:24px">
+            <a class="cta" href="https://github.com/barmoshe/catalogue-orchestrator" target="_blank" rel="noopener">View the repository →</a>
+            <a class="cta ghost" href="#s2">How it works ↓</a>
+          </div>
+        </div>
+        <div class="stage reveal d2"><canvas id="hero" width="720" height="495"></canvas></div>
+      </div>
+    </section>
+
+    <!-- 2 — PROBLEM -->
+    <section class="slide" id="s2">
+      <div class="wrap">
+        <p class="eyebrow reveal">The problem</p>
+        <h2 class="reveal d1">Every media pipeline is a one-off.</h2>
+        <p class="lead reveal d2">
+          You can hand-build a bespoke render pipeline for one job. But there is no <i>generic</i> engine that
+          takes an arbitrary catalogue of media plus an intent and produces a finished cut. Catalogue
+          Orchestrator is that engine: retrieval-driven, catalogue-first, domain-agnostic.
+        </p>
+        <div class="cards reveal d3" style="margin-top:34px">
+          <div class="card"><div class="ic">01</div><h3>Catalogue-first</h3><p>The unit of value is an indexed library of rich cards, not a single input file. A flat filename list is not a catalogue.</p></div>
+          <div class="card"><div class="ic">02</div><h3>Retrieval-driven</h3><p>What goes into a cut is selected by RAG, not hard-coded by a template. Domain-agnostic falls out of this.</p></div>
+          <div class="card"><div class="ic">03</div><h3>Local-first</h3><p>Heavy ingest and render run on your machine. No upload requirement, no hosted vector DB, no accounts.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 — THE ONE RULE -->
+    <section class="slide" id="s3">
+      <div class="wrap">
+        <p class="eyebrow reveal">The rule that makes it work</p>
+        <h2 class="reveal d1">AI proposes. The compiler disposes.</h2>
+        <p class="lead reveal d2">The single most important boundary in the system. It keeps output reproducible and the model's mistakes bounded.</p>
+        <div class="two reveal d3" style="margin-top:30px">
+          <div class="panel ai">
+            <div class="tag">The AI side</div>
+            <h3 style="margin:10px 0">Emits only a validated EDL</h3>
+            <p style="color:var(--muted);margin:0">The model never writes ffmpeg. It authors one structured Edit Decision List, validated with zod on the way out. If validation fails, it is re-prompted with the error, never hand-patched.</p>
+          </div>
+          <div class="panel det">
+            <div class="tag">The deterministic side</div>
+            <h3 style="margin:10px 0">Owns 100% of ffmpeg</h3>
+            <p style="color:var(--muted);margin:0">One compiler turns any valid EDL into arg arrays and renders the MP4. Pure and unit-tested, so the same EDL always yields the same cut. No hallucinated filtergraphs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — PIPELINE -->
+    <section class="slide" id="s4">
+      <div class="wrap">
+        <p class="eyebrow reveal">The pipeline</p>
+        <h2 class="reveal d1">Six stages, one vertical engine.</h2>
+        <p class="lead reveal d2">Ingest and index are shared. Only retrieval and the orchestrator's prompt switch per mode.</p>
+        <div class="stage reveal d3" style="max-width:780px;margin:24px auto 0"><canvas id="flow2" width="720" height="495"></canvas></div>
+        <div class="pipe reveal d4" style="margin-top:18px">
+          <div class="node"><div class="k">Ingest</div><div class="t">Probe → cards</div><div class="d">ffprobe, scene-detect, frame captions, transcript, signals</div></div>
+          <div class="node"><div class="k">Index</div><div class="t">Embed</div><div class="d">segments into a local vector store (LanceDB)</div></div>
+          <div class="node"><div class="k">Retrieve</div><div class="t">Hybrid RAG</div><div class="d">semantic + keyword + structured filters</div></div>
+          <div class="node ai"><div class="k">Orchestrate</div><div class="t">Author EDL</div><div class="d">Claude plans a schema-validated edit</div></div>
+          <div class="node det"><div class="k">Compile</div><div class="t">Auto-cut</div><div class="d">deterministic ffmpeg → MP4</div></div>
+          <div class="node"><div class="k">Refine</div><div class="t">Preview</div><div class="d">accept or regenerate with feedback</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 — THE EDL -->
+    <section class="slide" id="s5">
+      <div class="wrap">
+        <p class="eyebrow reveal">The contract</p>
+        <h2 class="reveal d1">One structured artifact: the EDL.</h2>
+        <p class="lead reveal d2">It is the only thing the model produces and the only thing the compiler consumes — validated in both directions.</p>
+        <div class="reveal d3" style="margin-top:24px">
+<pre><span class="tok-com">// the AI authors this — nothing else</span>
+EDL = {
+  title: <span class="tok-str">"..."</span>, mode: <span class="tok-str">"highlights" | "assembly"</span>,
+  target: { aspect: <span class="tok-str">"9:16"</span>, width: 1080, height: 1920, fps: 30 },
+  clips: [{
+    <span class="tok-key">segmentId</span>: <span class="tok-str">"&lt;must exist in the catalogue&gt;"</span>,
+    <span class="tok-key">sourceIn</span>: 4.2, <span class="tok-key">sourceOut</span>: 9.0,
+    <span class="tok-key">layout</span>: <span class="tok-str">"fit" | "fill" | "blurpad"</span>,
+    <span class="tok-key">captions</span>: [{ text: <span class="tok-str">"..."</span>, startSec: 0, endSec: 2.5 }]
+  }],
+  rationale: <span class="tok-str">"why these clips, in this order"</span>
+}</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 — TWO MODES -->
+    <section class="slide" id="s6">
+      <div class="wrap">
+        <p class="eyebrow reveal">Two modes, one engine</p>
+        <h2 class="reveal d1">Highlights and assembly share everything.</h2>
+        <div class="modes reveal d2" style="margin-top:24px">
+          <div class="mode">
+            <div class="big">Mode A</div>
+            <h3>Long-form → highlights</h3>
+            <p style="color:var(--muted);margin:0">Ingest one long recording, score the salient moments, and auto-cut the best of them into short vertical clips that land on coherent beats.</p>
+            <div class="flow">recording → segment → rank → cut → 9:16 clips</div>
+          </div>
+          <div class="mode">
+            <div class="big">Mode B</div>
+            <h3>Brief → assembled reel</h3>
+            <p style="color:var(--muted);margin:0">A text brief plus a catalogue. RAG retrieves the relevant assets across the library, the orchestrator orders them, and the compiler assembles a finished reel.</p>
+            <div class="flow">brief → retrieve → order → assemble → reel</div>
+          </div>
+        </div>
+        <p class="lead reveal d3" style="margin-top:22px">They differ only in the orchestrator's planning prompt and which retrieval runs. One codebase, not two.</p>
+      </div>
+    </section>
+
+    <!-- 7 — LOCAL TIER -->
+    <section class="slide" id="s7">
+      <div class="wrap">
+        <p class="eyebrow reveal">No keys required</p>
+        <h2 class="reveal d1">The whole pipeline runs offline.</h2>
+        <p class="lead reveal d2">
+          Every AI seam sits behind an interface with a deterministic <code style="color:var(--teal)">local</code> implementation:
+          hashed embeddings, stub captions, a heuristic planner. With no keys, the engine still ingests, retrieves,
+          plans, and renders a real MP4 — in CI and offline.
+        </p>
+        <div class="two reveal d3" style="margin-top:26px">
+          <div class="panel det">
+            <div class="tag">local tier · default</div>
+            <h3 style="margin:10px 0">Deterministic, no network</h3>
+            <p style="color:var(--muted);margin:0">Runs the full catalogue → cut loop with zero accounts. Perfect for tests, demos, and an offline machine.</p>
+          </div>
+          <div class="panel ai">
+            <div class="tag">real tier · drop in a key</div>
+            <h3 style="margin:10px 0">Whisper · vision · Claude</h3>
+            <p style="color:var(--muted);margin:0">Add keys to <code>.env</code> and the same interfaces swap to real transcription, captions, embeddings, and EDL authoring. No code change.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 — STACK + CTA -->
+    <section class="slide" id="s8">
+      <div class="wrap" style="text-align:center">
+        <p class="eyebrow reveal" style="color:var(--teal)">Built on</p>
+        <h2 class="reveal d1">A small, sharp local stack.</h2>
+        <div class="stat-row reveal d2" style="margin-top:26px;text-align:left">
+          <div class="stat"><div class="n grad">Next 16</div><div class="l">React 19 · TypeScript · Electron desktop shell</div></div>
+          <div class="stat"><div class="n grad">ffmpeg</div><div class="l">bundled static binaries · deterministic compiler</div></div>
+          <div class="stat"><div class="n grad">LanceDB</div><div class="l">embedded local vector store · hybrid RAG</div></div>
+          <div class="stat"><div class="n grad">zod</div><div class="l">schema-validated AI output, both directions</div></div>
+        </div>
+        <h2 class="reveal d3" style="margin-top:54px">See the engine.</h2>
+        <div class="row reveal d4" style="justify-content:center;margin-top:6px">
+          <a class="cta" href="https://github.com/barmoshe/catalogue-orchestrator" target="_blank" rel="noopener">Open the repository →</a>
+        </div>
+        <p class="foot reveal d4">catalogue + intent → AI-planned EDL → deterministic ffmpeg cut · built by Bar Moshe</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---- nav dots + progress + reveal-on-scroll -------------------------------
+    const slides = [...document.querySelectorAll('.slide')];
+    const dots = document.getElementById('dots');
+    slides.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      b.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth' }));
+      dots.appendChild(b);
+    });
+    const dotEls = [...dots.children];
+    const progress = document.getElementById('progress');
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          const i = slides.indexOf(e.target);
+          dotEls.forEach((d, k) => d.setAttribute('aria-current', k === i ? 'true' : 'false'));
+          e.target.querySelectorAll('.reveal').forEach((r) => r.classList.add('in'));
+        }
+      });
+    }, { threshold: 0.4 });
+    slides.forEach((s) => io.observe(s));
+
+    addEventListener('scroll', () => {
+      const h = document.documentElement;
+      const p = h.scrollTop / (h.scrollHeight - h.clientHeight || 1);
+      progress.style.transform = 'scaleX(' + p + ')';
+    }, { passive: true });
+
+    // keyboard arrows
+    addEventListener('keydown', (e) => {
+      const cur = slides.findIndex((s) => { const r = s.getBoundingClientRect(); return r.top >= -window.innerHeight * 0.5 && r.top < window.innerHeight * 0.5; });
+      if (e.key === 'ArrowDown' && cur < slides.length - 1) { e.preventDefault(); slides[cur + 1].scrollIntoView({ behavior: 'smooth' }); }
+      if (e.key === 'ArrowUp' && cur > 0) { e.preventDefault(); slides[cur - 1].scrollIntoView({ behavior: 'smooth' }); }
+    });
+
+    // ---- DIAGRAM 1 (hero): the catalogue emulator — catalogue grid → retrieve → timeline → 9:16 cut
+    (function hero() {
+      const cv = document.getElementById('hero');
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const C = { teal: '#5fe3e0', tealDeep: '#37b6c0', violet: '#c98fe6', ink: '#0f1320', tile: '#283047', edge: '#3c4864', text: '#e6ecf5' };
+      const hues = ['#e08a6a', '#7fcf86', '#7aa6f0', '#d6b25a', '#b78ff0', '#74c8d0'];
+      const PICKS = [1, 5, 6];
+      const W = cv.width, H = cv.height, PERIOD = 9000;
+      let t0 = null;
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const cl = (t) => t < 0 ? 0 : t > 1 ? 1 : t;
+      const sm = (t) => { const c = cl(t); return c * c * (3 - 2 * c); };
+      function rr(x, y, w, h, r) { const k = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.roundRect(x, y, w, h, k); }
+
+      function frame(ts) {
+        if (t0 === null) t0 = ts;
+        const time = reduce ? PERIOD * 0.82 : (ts - t0);
+        const loop = (time % PERIOD) / PERIOD;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = C.ink; rr(0, 0, W, H, 22); ctx.fill();
+        const pad = 42;
+        const gx = pad, gy = pad, gw = W * 0.42, gh = H * 0.62;
+        const gap = gw * 0.07;
+        const cw = (gw - gap * 2) / 3, ch = (gh - gap * 2) / 3;
+        const outH = H * 0.66, outW = outH * 9 / 16, outX = W - pad - outW, outY = pad;
+        const tlX = gx, tlW = outX - 0.03 * W - tlX, tlH = H * 0.13, tlY = H - pad - tlH;
+        const center = (i) => ({ x: gx + (i % 3) * (cw + gap), y: gy + ((i / 3) | 0) * (ch + gap), w: cw, h: ch });
+        const scan = sm((loop - 0.04) / 0.22), lit = sm((loop - 0.2) / 0.16), fly = sm((loop - 0.4) / 0.24), comp = sm((loop - 0.66) / 0.2), cap = sm((loop - 0.78) / 0.14);
+
+        for (let i = 0; i < 9; i++) {
+          const { x, y, w, h } = center(i);
+          ctx.fillStyle = C.tile; rr(x, y, w, h, w * 0.12); ctx.fill();
+          ctx.save(); rr(x, y, w, h, w * 0.12); ctx.clip();
+          const hue = hues[i % hues.length];
+          const g = ctx.createLinearGradient(x, y, x + w, y + h);
+          g.addColorStop(0, hue); g.addColorStop(1, hue + '66'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h * 0.62);
+          ctx.fillStyle = '#e6ecf5e6'; const ti = x + w * 0.5, tj = y + h * 0.3, s = w * 0.12;
+          ctx.beginPath(); ctx.moveTo(ti - s * 0.5, tj - s * 0.7); ctx.lineTo(ti - s * 0.5, tj + s * 0.7); ctx.lineTo(ti + s * 0.8, tj); ctx.closePath(); ctx.fill();
+          ctx.restore();
+          const pi = PICKS.indexOf(i);
+          const sweepX = gx + scan * gw, near = 1 - cl(Math.abs((x + w / 2) - sweepX) / (cw * 0.9));
+          if (!reduce && scan > 0 && scan < 1 && near > 0) { ctx.strokeStyle = 'rgba(95,227,224,' + (0.5 * near) + ')'; ctx.lineWidth = 1.5; rr(x, y, w, h, w * 0.12); ctx.stroke(); }
+          if (pi >= 0 && lit > 0) {
+            ctx.strokeStyle = 'rgba(95,227,224,' + (0.9 * lit) + ')'; ctx.lineWidth = 2.4; rr(x - 1.5, y - 1.5, w + 3, h + 3, w * 0.14); ctx.stroke();
+            const bx = x + w - w * 0.16, by = y + h * 0.16; ctx.fillStyle = 'rgba(95,227,224,' + lit + ')'; ctx.beginPath(); ctx.arc(bx, by, w * 0.12, 0, 7); ctx.fill();
+            ctx.fillStyle = C.ink; ctx.font = '700 ' + (w * 0.16) + 'px ui-sans-serif,system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(pi + 1), bx, by + 0.5);
+          }
+        }
+        // CATALOGUE label
+        ctx.fillStyle = 'rgba(95,227,224,0.85)'; ctx.font = '600 12px ui-monospace,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText('CATALOGUE', gx, gy - 10);
+        // timeline
+        ctx.fillStyle = 'rgba(40,48,71,0.7)'; rr(tlX, tlY, tlW, tlH, tlH * 0.3); ctx.fill();
+        const sGap = tlW * 0.03, sW = (tlW - sGap * (PICKS.length + 1)) / PICKS.length, sY = tlY + tlH * 0.16, sH = tlH * 0.68;
+        PICKS.forEach((idx, k) => {
+          const src = center(idx), dstX = tlX + sGap + k * (sW + sGap);
+          const f = sm(cl((fly - k * 0.12) / (1 - k * 0.12)));
+          if (f < 0.01) return;
+          const cx = lerp(src.x, dstX, f), cy = lerp(src.y, sY, f), ww = lerp(src.w, sW, f), hh = lerp(src.h, sH, f);
+          ctx.save(); rr(cx, cy, ww, hh, Math.min(ww, hh) * 0.18); ctx.clip();
+          const hue = hues[idx % hues.length]; const g = ctx.createLinearGradient(cx, cy, cx + ww, cy + hh); g.addColorStop(0, hue); g.addColorStop(1, hue + '88'); ctx.fillStyle = g; ctx.fillRect(cx, cy, ww, hh); ctx.restore();
+          ctx.strokeStyle = 'rgba(95,227,224,' + (0.6 * f) + ')'; ctx.lineWidth = 1.4; rr(cx, cy, ww, hh, Math.min(ww, hh) * 0.18); ctx.stroke();
+        });
+        ctx.fillStyle = 'rgba(230,236,245,0.4)'; ctx.font = '600 11px ui-monospace,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText('TIMELINE', tlX, tlY - 6);
+        if (comp > 0) { const phx = tlX + (0.08 + 0.84 * ((time / 1000 * 0.5) % 1)) * tlW; ctx.strokeStyle = 'rgba(201,143,230,' + (0.8 * comp) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(phx, tlY - tlH * 0.1); ctx.lineTo(phx, tlY + tlH * 1.1); ctx.stroke(); }
+        // output frame glow + frame
+        if (comp > 0) { const gcx = outX + outW / 2, gcy = outY + outH / 2; const gl = ctx.createRadialGradient(gcx, gcy, outW * 0.1, gcx, gcy, outW * 1.15); gl.addColorStop(0, 'rgba(95,227,224,' + (0.28 * comp) + ')'); gl.addColorStop(1, 'rgba(95,227,224,0)'); ctx.fillStyle = gl; ctx.fillRect(outX - outW * 0.7, outY - outH * 0.1, outW * 2.4, outH * 1.2); }
+        ctx.fillStyle = C.tile; rr(outX, outY, outW, outH, outW * 0.08); ctx.fill();
+        ctx.save(); rr(outX, outY, outW, outH, outW * 0.08); ctx.clip();
+        if (comp > 0) { const hue = hues[PICKS[Math.min(2, ((time / 1000 * 0.5 % 1) * 3) | 0)] % hues.length]; const g = ctx.createLinearGradient(outX, outY, outX + outW, outY + outH); g.addColorStop(0, hue); g.addColorStop(1, 'rgba(201,143,230,' + (0.55 * comp) + ')'); ctx.fillStyle = g; ctx.fillRect(outX, outY, outW, outH);
+          ctx.fillStyle = 'rgba(230,236,245,' + (0.85 * comp) + ')'; const px = outX + outW / 2, py = outY + outH * 0.44, ps = outW * 0.12; ctx.beginPath(); ctx.moveTo(px - ps * 0.5, py - ps * 0.7); ctx.lineTo(px - ps * 0.5, py + ps * 0.7); ctx.lineTo(px + ps * 0.8, py); ctx.closePath(); ctx.fill(); }
+        if (cap > 0) { const cY = outY + outH * 0.72; ctx.fillStyle = 'rgba(15,19,32,' + (0.55 * cap) + ')'; ctx.fillRect(outX, cY, outW, outH * 0.2); ctx.fillStyle = 'rgba(95,227,224,' + cap + ')'; rr(outX + outW * 0.12, cY + outH * 0.05, outW * 0.4, outH * 0.03, 4); ctx.fill(); ctx.fillStyle = 'rgba(230,236,245,' + (0.85 * cap) + ')'; rr(outX + outW * 0.12, cY + outH * 0.11, outW * 0.66, outH * 0.025, 3); ctx.fill(); rr(outX + outW * 0.12, cY + outH * 0.155, outW * 0.5, outH * 0.025, 3); ctx.fill(); }
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(60,72,100,0.9)'; ctx.lineWidth = 1.2; rr(outX, outY, outW, outH, outW * 0.08); ctx.stroke();
+        ctx.fillStyle = 'rgba(230,236,245,0.5)'; ctx.font = '600 ' + (outW * 0.1) + 'px ui-sans-serif,system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillText('9:16', outX + outW - outW * 0.08, outY + outW * 0.06);
+
+        if (!reduce) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    })();
+
+    // ---- DIAGRAM 2 (slide 4): catalogue library + intent -> RAG -> EDL -> CUT -> edited 9:16 (WIP — to refine later)
+    (function catalogueDiagram() {
+      const cv = document.getElementById('flow2');
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const W = cv.width, H = cv.height;
+      const teal = '#5fe3e0', violet = '#c98fe6', ink = '#0f1320', tile = '#2a3350', edge = '#3c4864', txt = '#e6ecf5', muted = '#9fb0c8';
+      const hues = ['#e08a6a', '#7fcf86', '#7aa6f0', '#d6b25a', '#b78ff0'];
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const cl = (t) => t < 0 ? 0 : t > 1 ? 1 : t;
+      const sm = (t) => { const c = cl(t); return c * c * (3 - 2 * c); };
+      function rr(x, y, w, h, r) { const k = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.roundRect(x, y, w, h, k); }
+
+      // geometry (responsive design space). The catalogue is a LIBRARY of many
+      // assets; the intent (a video to highlight, or a text brief) drives RAG, which
+      // retrieves FROM the catalogue. Retrieved segments flow EDL -> CUT -> edited 9:16.
+      const railY = H * 0.5, railX0 = W * 0.345;
+      const out = { w: H * 0.46 * 9 / 16, h: H * 0.46, x: 0, y: 0 };
+      out.x = W - W * 0.02 - out.w; out.y = railY - out.h / 2;
+      const railX1 = out.x - W * 0.02;
+      const stages = [
+        { x: W * 0.40, l: 'RAG' },
+        { x: W * 0.55, l: 'EDL' },
+        { x: W * 0.69, l: 'CUT' },
+      ];
+      const cat = { x: W * 0.05, y: H * 0.165, w: W * 0.255, h: H * 0.34 };
+      const intent = { x: W * 0.05, y: H * 0.63, w: W * 0.255, h: H * 0.23 };
+      const PICKS = [1, 5, 6];
+      const PERIOD = 8500;
+      const gp = cat.w * 0.08, gg = cat.w * 0.05;
+      const tw = (cat.w - 2 * gp - 2 * gg) / 3, th = (cat.h - 2 * gp - 2 * gg) / 3;
+      function tileC(i) { const c = i % 3, r = (i / 3) | 0; const x = cat.x + gp + c * (tw + gg), y = cat.y + gp + r * (th + gg); return { x, y, w: tw, h: th, cx: x + tw / 2, cy: y + th / 2 }; }
+      const railEntry = { x: railX0, y: railY };
+
+      function draw(time) {
+        const loop = (time % PERIOD) / PERIOD;
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = ink; rr(0, 0, W, H, 22); ctx.fill();
+
+        const scan = sm((loop - 0.02) / 0.15);
+        const fire = sm((loop - 0.15) / 0.10);
+        const lit = sm((loop - 0.20) / 0.12);
+        const flyRaw = (loop - 0.32) / 0.32;
+        const comp = sm((loop - 0.64) / 0.16);
+        const cap = sm((loop - 0.78) / 0.12);
+        const retain = 1 - sm((loop - 0.6) / 0.12);
+
+        const fOf = (k) => sm(cl((flyRaw - k * 0.07) / 0.7));
+        const tokenPos = (k) => {
+          const f = fOf(k), t = tileC(PICKS[k]);
+          if (f <= 0) return { x: t.cx, y: t.cy, f: 0, born: false };
+          if (f < 0.4) { const u = sm(f / 0.4), ctrlx = railX0 - W * 0.03, ctrly = lerp(t.cy, railY, 0.6);
+            return { x: (1 - u) * (1 - u) * t.cx + 2 * (1 - u) * u * ctrlx + u * u * railEntry.x,
+                     y: (1 - u) * (1 - u) * t.cy + 2 * (1 - u) * u * ctrly + u * u * railEntry.y, f, born: true }; }
+          const u = (f - 0.4) / 0.6; return { x: lerp(railEntry.x, railX1, u), y: railY, f, born: true };
+        };
+        const toks = PICKS.map((_, k) => tokenPos(k));
+        const glow = stages.map((s) => { let g = 0; for (const tk of toks) if (tk.born && tk.y === railY) g = Math.max(g, 1 - cl(Math.abs(tk.x - s.x) / (W * 0.03))); return g; });
+        const ragGlow = Math.max(fire, glow[0]);
+
+        // --- rails / connectors ---
+        ctx.strokeStyle = edge; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(railX0, railY); ctx.lineTo(railX1, railY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(railX1, railY); ctx.lineTo(out.x, railY); ctx.stroke();
+        // intent -> RAG (the intent drives retrieval)
+        ctx.strokeStyle = 'rgba(201,143,230,' + (0.22 + 0.55 * fire) + ')'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(intent.x + intent.w * 0.5, intent.y); ctx.quadraticCurveTo(stages[0].x, intent.y - H * 0.05, stages[0].x, railY + 18); ctx.stroke();
+        // RAG -> picked tiles (retrieval reaches INTO the catalogue)
+        toks.forEach((tk, k) => { const a = lit * (1 - tk.f) * 0.8; if (a <= 0.02) return; const t = tileC(PICKS[k]);
+          ctx.strokeStyle = 'rgba(95,227,224,' + a + ')'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(stages[0].x, railY); ctx.lineTo(t.cx, t.cy); ctx.stroke(); });
+
+        // --- CATALOGUE (the indexed library) ---
+        label('CATALOGUE', cat.x, cat.y - 9, teal);
+        ctx.fillStyle = 'rgba(230,236,245,0.30)'; ctx.font = '500 10px ui-monospace,monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.fillText('ingested · indexed', cat.x + cat.w, cat.y - 9);
+        ctx.fillStyle = 'rgba(20,26,42,0.45)'; rr(cat.x - 7, cat.y - 5, cat.w + 14, cat.h + 10, 14); ctx.fill();
+        ctx.strokeStyle = edge; ctx.lineWidth = 1; rr(cat.x - 7, cat.y - 5, cat.w + 14, cat.h + 10, 14); ctx.stroke();
+        for (let i = 0; i < 9; i++) {
+          const t = tileC(i), hue = hues[i % hues.length];
+          ctx.fillStyle = tile; rr(t.x, t.y, t.w, t.h, t.w * 0.16); ctx.fill();
+          ctx.save(); rr(t.x, t.y, t.w, t.h, t.w * 0.16); ctx.clip();
+          const g = ctx.createLinearGradient(t.x, t.y, t.x + t.w, t.y + t.h); g.addColorStop(0, hue); g.addColorStop(1, hue + '55'); ctx.globalAlpha = 0.9; ctx.fillStyle = g; ctx.fillRect(t.x, t.y, t.w, t.h * 0.66); ctx.globalAlpha = 1;
+          ctx.restore();
+          const sweepX = cat.x + scan * cat.w, near = 1 - cl(Math.abs(t.cx - sweepX) / (tw * 0.9));
+          if (scan > 0 && scan < 1 && near > 0) { ctx.strokeStyle = 'rgba(95,227,224,' + (0.5 * near) + ')'; ctx.lineWidth = 1.3; rr(t.x, t.y, t.w, t.h, t.w * 0.16); ctx.stroke(); }
+          const k = PICKS.indexOf(i);
+          if (k >= 0) { const a = Math.max(lit * retain, toks[k].f > 0 && toks[k].f < 1 ? 0.7 : 0); if (a > 0.02) { ctx.strokeStyle = 'rgba(95,227,224,' + (0.9 * a) + ')'; ctx.lineWidth = 2.2; rr(t.x - 1.5, t.y - 1.5, t.w + 3, t.h + 3, t.w * 0.2); ctx.stroke(); } }
+        }
+
+        // --- INTENT (a video to highlight, or a text brief) ---
+        label('INTENT', intent.x, intent.y - 9, violet);
+        ctx.fillStyle = tile; rr(intent.x, intent.y, intent.w, intent.h, 12); ctx.fill();
+        ctx.strokeStyle = fire > 0.05 ? 'rgba(201,143,230,' + (0.4 + 0.5 * fire) + ')' : edge; ctx.lineWidth = 1.3; rr(intent.x, intent.y, intent.w, intent.h, 12); ctx.stroke();
+        const ip = intent.w * 0.08;
+        playGlyph(intent.x + ip + 8, intent.y + intent.h * 0.3, 8, 'rgba(95,227,224,0.92)');
+        ctx.fillStyle = 'rgba(230,236,245,0.62)'; ctx.font = '500 11px ui-monospace,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText('highlights of a video', intent.x + ip + 24, intent.y + intent.h * 0.3);
+        ctx.fillStyle = 'rgba(201,143,230,0.85)'; rr(intent.x + ip, intent.y + intent.h * 0.55, intent.w * 0.46, 5, 2.5); ctx.fill();
+        ctx.fillStyle = 'rgba(230,236,245,0.4)'; rr(intent.x + ip, intent.y + intent.h * 0.72, intent.w * 0.74, 4, 2); ctx.fill(); rr(intent.x + ip, intent.y + intent.h * 0.85, intent.w * 0.54, 4, 2); ctx.fill();
+
+        // --- stage chips ---
+        stages.forEach((s, k) => {
+          const g = k === 0 ? ragGlow : glow[k], cw = W * 0.10, ch = 36, x = s.x - cw / 2, y = railY - ch / 2;
+          if (g > 0) { ctx.fillStyle = 'rgba(95,227,224,' + (0.18 * g) + ')'; rr(x - 4, y - 4, cw + 8, ch + 8, 12); ctx.fill(); }
+          ctx.fillStyle = tile; rr(x, y, cw, ch, 9); ctx.fill();
+          ctx.strokeStyle = g > 0.05 ? 'rgba(95,227,224,' + (0.4 + 0.6 * g) + ')' : edge; ctx.lineWidth = 1.4; rr(x, y, cw, ch, 9); ctx.stroke();
+          ctx.fillStyle = g > 0.2 ? teal : txt; ctx.font = '600 12px ui-monospace,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.l, s.x, railY + 0.5);
+        });
+
+        // --- tokens = retrieved segments flowing to the cut ---
+        toks.forEach((tk, k) => { if (!tk.born || tk.f >= 1) return; const sz = W * 0.019, hue = hues[PICKS[k] % hues.length];
+          ctx.save(); rr(tk.x - sz, tk.y - sz, sz * 2, sz * 2, sz * 0.5); ctx.clip(); ctx.fillStyle = hue; ctx.fillRect(tk.x - sz, tk.y - sz, sz * 2, sz * 2); ctx.restore();
+          ctx.strokeStyle = teal; ctx.lineWidth = 1.4; ctx.shadowColor = teal; ctx.shadowBlur = 8; rr(tk.x - sz, tk.y - sz, sz * 2, sz * 2, sz * 0.5); ctx.stroke(); ctx.shadowBlur = 0; });
+
+        // --- OUTPUT: edited 9:16 ---
+        label('EDITED  ·  9:16', out.x, out.y - 9, txt);
+        if (comp > 0) { const gx = out.x + out.w / 2, gy = out.y + out.h / 2; const gl = ctx.createRadialGradient(gx, gy, out.w * 0.1, gx, gy, out.w * 1.4); gl.addColorStop(0, 'rgba(95,227,224,' + (0.3 * comp) + ')'); gl.addColorStop(1, 'rgba(95,227,224,0)'); ctx.fillStyle = gl; ctx.fillRect(out.x - out.w, out.y - 20, out.w * 3, out.h + 40); }
+        ctx.fillStyle = tile; rr(out.x, out.y, out.w, out.h, 12); ctx.fill();
+        ctx.save(); rr(out.x, out.y, out.w, out.h, 12); ctx.clip();
+        if (comp > 0) { const hue = hues[PICKS[((time / 1500) | 0) % PICKS.length] % hues.length]; const og = ctx.createLinearGradient(out.x, out.y, out.x + out.w, out.y + out.h); og.addColorStop(0, hue); og.addColorStop(1, violet); ctx.globalAlpha = 0.5 + 0.4 * comp; ctx.fillStyle = og; ctx.fillRect(out.x, out.y, out.w, out.h); ctx.globalAlpha = 1;
+          playGlyph(out.x + out.w / 2, out.y + out.h * 0.42, out.w * 0.13, 'rgba(255,255,255,0.92)');
+          const ph = out.x + (0.08 + 0.84 * ((time / 1000 * 0.4) % 1)) * out.w; ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ph, out.y); ctx.lineTo(ph, out.y + out.h * 0.66); ctx.stroke(); }
+        if (cap > 0) { const cY = out.y + out.h * 0.72; ctx.fillStyle = 'rgba(15,19,32,' + (0.6 * cap) + ')'; ctx.fillRect(out.x, cY, out.w, out.h * 0.2); ctx.fillStyle = 'rgba(95,227,224,' + cap + ')'; rr(out.x + 10, cY + 8, out.w * 0.42, 5, 2.5); ctx.fill(); ctx.fillStyle = 'rgba(230,236,245,' + (0.8 * cap) + ')'; rr(out.x + 10, cY + 19, out.w * 0.7, 4, 2); ctx.fill(); }
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(95,227,224,' + (0.3 + 0.5 * comp) + ')'; ctx.lineWidth = 1.4; rr(out.x, out.y, out.w, out.h, 12); ctx.stroke();
+        if (cap > 0) { const bx = out.x + out.w - 6, by = out.y + 6; ctx.fillStyle = teal; ctx.globalAlpha = cap; ctx.beginPath(); ctx.arc(bx, by, 9, 0, 7); ctx.fill(); ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(bx - 4, by); ctx.lineTo(bx - 1, by + 3); ctx.lineTo(bx + 4, by - 3); ctx.stroke(); ctx.globalAlpha = 1; }
+        ctx.fillStyle = 'rgba(230,236,245,0.5)'; ctx.font = '600 11px ui-monospace,monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'top'; ctx.fillText('MP4', out.x + out.w - 8, out.y + 7);
+      }
+
+      function label(text, x, y, col) {
+        ctx.fillStyle = col; ctx.font = '600 11px ui-monospace,monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.globalAlpha = 0.85; ctx.fillText(text, x, y); ctx.globalAlpha = 1;
+      }
+      function playGlyph(cx, cy, s, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(cx - s * 0.5, cy - s * 0.75); ctx.lineTo(cx - s * 0.5, cy + s * 0.75); ctx.lineTo(cx + s * 0.85, cy); ctx.closePath(); ctx.fill(); }
+
+      let t0 = null;
+      function frame(ts) {
+        if (t0 === null) t0 = ts;
+        draw(ts - t0);
+        if (!reduce) requestAnimationFrame(frame);
+      }
+      if (reduce) draw(PERIOD * 0.72); // representative static frame
+      else requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
