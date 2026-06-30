@@ -1,0 +1,21 @@
+# dependencies
+/node_modules
+
+# next
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# generated catalogue: cards, keyframes, lancedb index — never commit
+/.catalogue/
+
+# runtime: jobs.json, temp render dirs, rendered outputs
+/runtime/
+
+# secrets — keys live here only
+.env
+.env*.local
+
+# os
+.DS_Store

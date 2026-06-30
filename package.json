@@ -1,0 +1,52 @@
+{
+  "name": "catalogue-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "description": "Local-first, domain-agnostic AI video orchestrator: catalogue + intent -> AI-planned EDL -> deterministic ffmpeg cut.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "co": "node --import tsx cli/co.ts",
+    "electron:dev": "CO_ELECTRON_DEV=1 electron .",
+    "electron:smoke": "electron --version",
+    "prepare:standalone": "node scripts/prepare-standalone.cjs",
+    "package": "npm run build && npm run prepare:standalone && electron-forge package",
+    "make": "npm run build && npm run prepare:standalone && electron-forge make"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.107.0",
+    "@lancedb/lancedb": "^0.30.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "next": "^16.2.9",
+    "openai": "^6.45.0",
+    "proper-lockfile": "^4.1.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "uuid": "^11.0.0",
+    "zod": "^3.25.0",
+    "zod-to-json-schema": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/proper-lockfile": "^4.1.4",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@eslint/eslintrc": "^3.2.0",
+    "@electron-forge/cli": "^7.11.2",
+    "@electron-forge/maker-zip": "^7.11.2",
+    "@electron-forge/maker-dmg": "^7.11.2",
+    "electron": "^43.0.0",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^16.2.9",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
