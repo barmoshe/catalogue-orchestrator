@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { EmbeddingsProvider } from "../types.js";
+import type { EmbeddingsProvider } from "../types";
 
 /**
  * OpenAI text embeddings. Model from OPENAI_EMBED_MODEL (default

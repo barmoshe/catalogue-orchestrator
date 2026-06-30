@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { edlToFfmpeg, type ResolvedClip } from "../src/core/compile/edlToFfmpeg.js";
-import { EDL, makeTarget } from "../src/core/schema/edl.js";
-import { videoFitChain, escapeFilterPath } from "../src/core/compile/filters.js";
-import { buildAss } from "../src/core/compile/captions.js";
+import { edlToFfmpeg, type ResolvedClip } from "../src/core/compile/edlToFfmpeg";
+import { EDL, makeTarget } from "../src/core/schema/edl";
+import { videoFitChain, escapeFilterPath } from "../src/core/compile/filters";
+import { buildAss } from "../src/core/compile/captions";
 
 function inputs(clips: ResolvedClip[], music = false) {
   const edl = EDL.parse({

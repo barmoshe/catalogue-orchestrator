@@ -1,8 +1,8 @@
-import { getProviders } from "../providers/index.js";
-import type { Providers } from "../providers/types.js";
-import { getStore } from "../index/embed.js";
-import { reciprocalRankFusion, type ScoredSegment, type StructuredFilter, type VectorStore } from "../index/store.js";
-import type { Intent } from "../schema/intent.js";
+import { getProviders } from "../providers/index";
+import type { Providers } from "../providers/types";
+import { getStore } from "../index/embed";
+import { reciprocalRankFusion, type ScoredSegment, type StructuredFilter, type VectorStore } from "../index/store";
+import type { Intent } from "../schema/intent";
 
 export type RetrieveOptions = {
   query: string;

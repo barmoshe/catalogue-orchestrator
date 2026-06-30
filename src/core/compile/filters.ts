@@ -1,4 +1,4 @@
-import type { Layout } from "../schema/edl.js";
+import type { Layout } from "../schema/edl";
 
 /**
  * Aspect-fit filtergraphs (DESIGN §7 / AGENTS rule 4) — scale + pad/crop, never stretch:

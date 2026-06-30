@@ -1,14 +1,14 @@
-import { Intent } from "../schema/intent.js";
-import type { EDL } from "../schema/edl.js";
-import { loadCatalogue } from "../ingest/persist.js";
-import { getProviders, isLocalLlm } from "../providers/index.js";
-import type { Providers } from "../providers/types.js";
-import { getStore } from "../index/embed.js";
-import type { VectorStore } from "../index/store.js";
-import { retrieve, filterForIntent } from "../retrieve/retrieve.js";
-import { makeLookup, validateEdl } from "./validate.js";
-import { planLocal } from "./planLocal.js";
-import { planModel } from "./planModel.js";
+import { Intent } from "../schema/intent";
+import type { EDL } from "../schema/edl";
+import { loadCatalogue } from "../ingest/persist";
+import { getProviders, isLocalLlm } from "../providers/index";
+import type { Providers } from "../providers/types";
+import { getStore } from "../index/embed";
+import type { VectorStore } from "../index/store";
+import { retrieve, filterForIntent } from "../retrieve/retrieve";
+import { makeLookup, validateEdl } from "./validate";
+import { planLocal } from "./planLocal";
+import { planModel } from "./planModel";
 
 export type OrchestrateOptions = {
   env?: NodeJS.ProcessEnv;
@@ -43,7 +43,7 @@ export async function orchestrate(intentInput: unknown, opts: OrchestrateOptions
   // Fallback: if retrieval came back empty (e.g. an empty index), use filtered catalogue
   // segments directly so the planner still has material.
   if (candidates.length === 0) {
-    const { passesFilter } = await import("../index/store.js");
+    const { passesFilter } = await import("../index/store");
     candidates = cat.segments.filter((s) => passesFilter(s, filter)).map((segment) => ({ segment, score: 0 }));
   }
 

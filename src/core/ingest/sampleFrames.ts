@@ -1,8 +1,8 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { ffmpegPath } from "../media/ffmpegPath.js";
-import { run } from "../media/spawn.js";
-import type { Window } from "./sceneDetect.js";
+import { ffmpegPath } from "../media/ffmpegPath";
+import { run } from "../media/spawn";
+import type { Window } from "./sceneDetect";
 
 /**
  * Extract ONE representative keyframe per window (at its midpoint) — scene-sampled, not

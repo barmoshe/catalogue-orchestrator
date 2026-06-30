@@ -1,4 +1,4 @@
-import type { TranscriptionProvider, TranscriptResult } from "../types.js";
+import type { TranscriptionProvider, TranscriptResult } from "../types";
 
 /**
  * Deterministic, no-network transcription stub. It never invents speech: it returns an

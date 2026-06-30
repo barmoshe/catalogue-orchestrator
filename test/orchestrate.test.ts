@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import type { AssetCard, SegmentCard, Catalogue } from "../src/core/schema/cards.js";
-import { Intent } from "../src/core/schema/intent.js";
-import { makeLookup, validateEdl } from "../src/core/orchestrate/validate.js";
-import { planLocal } from "../src/core/orchestrate/planLocal.js";
-import { EDL } from "../src/core/schema/edl.js";
-import type { ScoredSegment } from "../src/core/index/store.js";
+import type { AssetCard, SegmentCard, Catalogue } from "../src/core/schema/cards";
+import { Intent } from "../src/core/schema/intent";
+import { makeLookup, validateEdl } from "../src/core/orchestrate/validate";
+import { planLocal } from "../src/core/orchestrate/planLocal";
+import { EDL } from "../src/core/schema/edl";
+import type { ScoredSegment } from "../src/core/index/store";
 
 function asset(id: string, dur: number | null, kind: AssetCard["kind"] = "video"): AssetCard {
   return { id, path: `${id}.mp4`, kind, durationSec: dur, width: 640, height: 360, fps: 30, hasAudio: true, codec: "h264", summary: "", tags: [], dominantColors: [], segmentIds: [], ingestedAt: "2026-01-01T00:00:00Z" };

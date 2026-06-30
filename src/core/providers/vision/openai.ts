@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import OpenAI from "openai";
-import type { VisionProvider } from "../types.js";
+import type { VisionProvider } from "../types";
 
 /**
  * OpenAI vision caption over a scene-sampled keyframe (never per-frame — cost/latency).

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { EmbeddingsProvider } from "../types.js";
+import type { EmbeddingsProvider } from "../types";
 
 /**
  * Deterministic, no-network embedding: a hashed bag-of-words vector. Each token is

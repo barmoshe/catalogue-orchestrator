@@ -1,4 +1,4 @@
-import type { EdlCaption } from "../schema/edl.js";
+import type { EdlCaption } from "../schema/edl";
 
 /**
  * Captions are burned via libass (the bundled ffmpeg-static has `ass`/`subtitles` but NOT

@@ -1,5 +1,5 @@
 import { basename, extname } from "node:path";
-import type { VisionProvider } from "../types.js";
+import type { VisionProvider } from "../types";
 
 /**
  * Deterministic, no-network caption stub. It derives a plain, honest descriptor from

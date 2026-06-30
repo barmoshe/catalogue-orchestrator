@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import OpenAI from "openai";
-import type { TranscriptionProvider, TranscriptResult } from "../types.js";
+import type { TranscriptionProvider, TranscriptResult } from "../types";
 
 /**
  * OpenAI Whisper transcription. Follows the weatherv1-next request shape:

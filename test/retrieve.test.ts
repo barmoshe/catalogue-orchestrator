@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import type { SegmentCard } from "../src/core/schema/cards.js";
-import { LocalEmbeddings } from "../src/core/providers/embeddings/local.js";
-import { LocalVectorStore } from "../src/core/index/localStore.js";
-import { retrieve } from "../src/core/retrieve/retrieve.js";
-import { reciprocalRankFusion, passesFilter } from "../src/core/index/store.js";
+import type { SegmentCard } from "../src/core/schema/cards";
+import { LocalEmbeddings } from "../src/core/providers/embeddings/local";
+import { LocalVectorStore } from "../src/core/index/localStore";
+import { retrieve } from "../src/core/retrieve/retrieve";
+import { reciprocalRankFusion, passesFilter } from "../src/core/index/store";
 
 function seg(id: string, text: string, over: Partial<SegmentCard> = {}): SegmentCard {
   return {

@@ -1,7 +1,7 @@
-import { ffmpegPath } from "../media/ffmpegPath.js";
-import { run, runOrThrow } from "../media/spawn.js";
-import { probe } from "../media/ffprobe.js";
-import type { CompilePlan, FfmpegJob } from "./edlToFfmpeg.js";
+import { ffmpegPath } from "../media/ffmpegPath";
+import { run, runOrThrow } from "../media/spawn";
+import { probe } from "../media/ffprobe";
+import type { CompilePlan, FfmpegJob } from "./edlToFfmpeg";
 
 export type RenderProgress = { stage: string; index: number; total: number; pct: number };
 

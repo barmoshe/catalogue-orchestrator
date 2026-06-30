@@ -1,6 +1,6 @@
-import { ffprobePath } from "./ffmpegPath.js";
-import { runOrThrow } from "./spawn.js";
-import type { AssetKind } from "../schema/cards.js";
+import { ffprobePath } from "./ffmpegPath";
+import { runOrThrow } from "./spawn";
+import type { AssetKind } from "../schema/cards";
 
 export type ProbeResult = {
   kind: AssetKind;

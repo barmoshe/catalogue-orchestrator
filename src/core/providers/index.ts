@@ -1,14 +1,14 @@
-import type { Providers, ProviderKind } from "./types.js";
-import { LocalTranscription } from "./transcription/local.js";
-import { OpenAITranscription } from "./transcription/openai.js";
-import { LocalVision } from "./vision/local.js";
-import { OpenAIVision } from "./vision/openai.js";
-import { LocalEmbeddings } from "./embeddings/local.js";
-import { OpenAIEmbeddings } from "./embeddings/openai.js";
-import { LocalLlm } from "./llm/local.js";
-import { AnthropicLlm } from "./llm/anthropic.js";
+import type { Providers, ProviderKind } from "./types";
+import { LocalTranscription } from "./transcription/local";
+import { OpenAITranscription } from "./transcription/openai";
+import { LocalVision } from "./vision/local";
+import { OpenAIVision } from "./vision/openai";
+import { LocalEmbeddings } from "./embeddings/local";
+import { OpenAIEmbeddings } from "./embeddings/openai";
+import { LocalLlm } from "./llm/local";
+import { AnthropicLlm } from "./llm/anthropic";
 
-export * from "./types.js";
+export * from "./types";
 
 /**
  * Select the provider bundle from env. The design's core move (see CLAUDE.md): a

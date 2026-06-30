@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, isAbsolute, resolve } from "node:path";
-import { AssetCard, SegmentCard, type Catalogue } from "../schema/cards.js";
+import { AssetCard, SegmentCard, type Catalogue } from "../schema/cards";
 import { z } from "zod";
 
 /** One persisted unit: an asset plus its segments, stored at cards/<hash>.json. */

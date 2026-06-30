@@ -7,13 +7,13 @@
  *
  * Run via `npm run co -- ingest <dir>`.
  */
-import { ingestDir } from "../src/core/ingest/ingest.js";
-import { loadCatalogue } from "../src/core/ingest/persist.js";
-import { getProviders } from "../src/core/providers/index.js";
-import { buildIndex, getStore } from "../src/core/index/embed.js";
-import { retrieve } from "../src/core/retrieve/retrieve.js";
-import { orchestrate } from "../src/core/orchestrate/orchestrate.js";
-import { compileEdl } from "../src/core/compile/compile.js";
+import { ingestDir } from "../src/core/ingest/ingest";
+import { loadCatalogue } from "../src/core/ingest/persist";
+import { getProviders } from "../src/core/providers/index";
+import { buildIndex, getStore } from "../src/core/index/embed";
+import { retrieve } from "../src/core/retrieve/retrieve";
+import { orchestrate } from "../src/core/orchestrate/orchestrate";
+import { compileEdl } from "../src/core/compile/compile";
 import { writeFileSync, readFileSync } from "node:fs";
 
 async function main() {

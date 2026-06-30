@@ -1,5 +1,5 @@
-import { EDL } from "../schema/edl.js";
-import type { AssetCard, SegmentCard, Catalogue } from "../schema/cards.js";
+import { EDL } from "../schema/edl";
+import type { AssetCard, SegmentCard, Catalogue } from "../schema/cards";
 
 export type CatalogueLookup = {
   asset: (id: string) => AssetCard | undefined;

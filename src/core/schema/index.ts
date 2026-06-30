@@ -1,3 +1,3 @@
-export * from "./cards.js";
-export * from "./edl.js";
-export * from "./intent.js";
+export * from "./cards";
+export * from "./edl";
+export * from "./intent";

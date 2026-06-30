@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import type { LlmProvider } from "../types.js";
+import type { LlmProvider } from "../types";
 
 /**
  * Anthropic Claude with FORCED structured output (weatherv1-next pattern): the zod

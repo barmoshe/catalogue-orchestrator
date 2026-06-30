@@ -1,4 +1,4 @@
-import type { LlmProvider } from "../types.js";
+import type { LlmProvider } from "../types";
 
 /**
  * The `local` LLM tier does NOT do generic JSON completion — instead the orchestrator

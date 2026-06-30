@@ -1,8 +1,8 @@
-import { loadCatalogue } from "../ingest/persist.js";
-import { getProviders } from "../providers/index.js";
-import type { Providers } from "../providers/types.js";
-import { LocalVectorStore } from "./localStore.js";
-import type { VectorStore } from "./store.js";
+import { loadCatalogue } from "../ingest/persist";
+import { getProviders } from "../providers/index";
+import type { Providers } from "../providers/types";
+import { LocalVectorStore } from "./localStore";
+import type { VectorStore } from "./store";
 
 /** Resolve the default store (local; LanceDB is the documented swap). */
 export function getStore(env: NodeJS.ProcessEnv = process.env): VectorStore {

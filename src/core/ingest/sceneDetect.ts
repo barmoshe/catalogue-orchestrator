@@ -1,5 +1,5 @@
-import { ffmpegPath } from "../media/ffmpegPath.js";
-import { run } from "../media/spawn.js";
+import { ffmpegPath } from "../media/ffmpegPath";
+import { run } from "../media/spawn";
 
 export type Window = { startSec: number; endSec: number; motion: number };
 

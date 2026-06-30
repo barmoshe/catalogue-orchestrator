@@ -1,8 +1,8 @@
-import { EDL } from "../schema/edl.js";
-import type { Intent } from "../schema/intent.js";
-import type { ScoredSegment } from "../index/store.js";
-import type { Providers } from "../providers/types.js";
-import { validateEdl, type CatalogueLookup } from "./validate.js";
+import { EDL } from "../schema/edl";
+import type { Intent } from "../schema/intent";
+import type { ScoredSegment } from "../index/store";
+import type { Providers } from "../providers/types";
+import { validateEdl, type CatalogueLookup } from "./validate";
 
 const MAX_ATTEMPTS = 3;
 

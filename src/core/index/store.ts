@@ -1,4 +1,4 @@
-import type { SegmentCard } from "../schema/cards.js";
+import type { SegmentCard } from "../schema/cards";
 
 /** Cheap, exact pre-filters so retrieval returns candidates that are USABLE in the cut. */
 export type StructuredFilter = {

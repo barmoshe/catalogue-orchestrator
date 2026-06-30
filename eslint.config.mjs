@@ -1,16 +1,17 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
-
+// Next 16 ships flat ESLint configs directly (no FlatCompat needed). jsx-a11y rides
+// along in core-web-vitals — the non-negotiable accessibility gate.
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // CommonJS Node files (Electron main/preload, build scripts) legitimately use require().
+  { ignores: [".next/**", ".catalogue/**", "runtime/**", "node_modules/**", "**/*.cjs", "electron/**", "scripts/**"] },
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
-    ignores: [".next/**", ".catalogue/**", "runtime/**", "node_modules/**"],
+    // Local-first app: keyframes + rendered frames are served by our own API routes;
+    // next/image optimization doesn't apply, so plain <img> is intentional.
+    rules: { "@next/next/no-img-element": "off" },
   },
 ];
 

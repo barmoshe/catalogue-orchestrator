@@ -1,13 +1,13 @@
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join, isAbsolute, resolve, dirname } from "node:path";
 import { randomUUID } from "node:crypto";
-import { EDL } from "../schema/edl.js";
-import { loadCatalogue } from "../ingest/persist.js";
-import { makeLookup, validateEdl } from "../orchestrate/validate.js";
-import { edlToFfmpeg, type ResolvedClip } from "./edlToFfmpeg.js";
-import { executePlan, type RenderProgress, type RunResultInfo } from "./run.js";
-import { resolveFont } from "./font.js";
-import { buildAss } from "./captions.js";
+import { EDL } from "../schema/edl";
+import { loadCatalogue } from "../ingest/persist";
+import { makeLookup, validateEdl } from "../orchestrate/validate";
+import { edlToFfmpeg, type ResolvedClip } from "./edlToFfmpeg";
+import { executePlan, type RenderProgress, type RunResultInfo } from "./run";
+import { resolveFont } from "./font";
+import { buildAss } from "./captions";
 
 export function runtimeDir(env: NodeJS.ProcessEnv = process.env): string {
   const d = env.RUNTIME_DIR || "runtime";

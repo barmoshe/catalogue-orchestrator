@@ -1,5 +1,5 @@
-import type { EDL, EdlClip } from "../schema/edl.js";
-import { videoFitChain, subtitlesChain } from "./filters.js";
+import type { EDL, EdlClip } from "../schema/edl";
+import { videoFitChain, subtitlesChain } from "./filters";
 
 export type ResolvedClip = {
   clip: EdlClip;

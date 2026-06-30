@@ -1,8 +1,8 @@
-import { ffmpegPath } from "../media/ffmpegPath.js";
-import { run } from "../media/spawn.js";
-import type { ShotType } from "../schema/cards.js";
-import type { Window } from "./sceneDetect.js";
-import type { TranscriptSegment } from "../providers/types.js";
+import { ffmpegPath } from "../media/ffmpegPath";
+import { run } from "../media/spawn";
+import type { ShotType } from "../schema/cards";
+import type { Window } from "./sceneDetect";
+import type { TranscriptSegment } from "../providers/types";
 
 export type SegmentSignals = {
   motion: number;

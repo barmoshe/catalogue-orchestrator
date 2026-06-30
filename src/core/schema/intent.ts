@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Aspect } from "./edl.js";
+import { Aspect } from "./edl";
 
 /**
  * The user's request to the engine. Two modes share one shape; the orchestrator picks

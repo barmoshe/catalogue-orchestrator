@@ -1,11 +1,11 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { SegmentCard } from "../schema/cards.js";
+import { SegmentCard } from "../schema/cards";
 import { z } from "zod";
-import { tokenize } from "../providers/embeddings/local.js";
-import { catalogueDir } from "../ingest/persist.js";
-import { cosine, passesFilter, type ScoredSegment, type StructuredFilter, type VectorStore } from "./store.js";
+import { tokenize } from "../providers/embeddings/local";
+import { catalogueDir } from "../ingest/persist";
+import { cosine, passesFilter, type ScoredSegment, type StructuredFilter, type VectorStore } from "./store";
 
 const IndexItem = z.object({ segment: SegmentCard, vector: z.array(z.number()) });
 const IndexFile = z.object({ dim: z.number(), items: z.array(IndexItem) });

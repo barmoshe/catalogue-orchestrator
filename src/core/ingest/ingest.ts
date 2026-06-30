@@ -1,15 +1,15 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, extname, basename } from "node:path";
 import { existsSync } from "node:fs";
-import { hashFile } from "../util/hash.js";
-import { probe } from "../media/ffprobe.js";
-import { sceneDetect, type Window } from "./sceneDetect.js";
-import { sampleFrames, sampleOne } from "./sampleFrames.js";
-import { measureAudioEnergy, deriveSegmentSignals } from "./deriveSignals.js";
-import { hasEntry, readEntry, writeEntry, keyframeDir, type StoredEntry } from "./persist.js";
-import { getProviders } from "../providers/index.js";
-import type { Providers, TranscriptSegment } from "../providers/types.js";
-import type { AssetCard, SegmentCard } from "../schema/cards.js";
+import { hashFile } from "../util/hash";
+import { probe } from "../media/ffprobe";
+import { sceneDetect, type Window } from "./sceneDetect";
+import { sampleFrames, sampleOne } from "./sampleFrames";
+import { measureAudioEnergy, deriveSegmentSignals } from "./deriveSignals";
+import { hasEntry, readEntry, writeEntry, keyframeDir, type StoredEntry } from "./persist";
+import { getProviders } from "../providers/index";
+import type { Providers, TranscriptSegment } from "../providers/types";
+import type { AssetCard, SegmentCard } from "../schema/cards";
 
 const MEDIA_EXT = new Set([
   ".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi", // video

@@ -1,8 +1,8 @@
-import { makeTarget, type EDL, type EdlClip, type EdlCaption } from "../schema/edl.js";
-import type { Intent } from "../schema/intent.js";
-import type { ScoredSegment } from "../index/store.js";
-import { hashString } from "../util/hash.js";
-import type { CatalogueLookup } from "./validate.js";
+import { makeTarget, type EDL, type EdlClip, type EdlCaption } from "../schema/edl";
+import type { Intent } from "../schema/intent";
+import type { ScoredSegment } from "../index/store";
+import { hashString } from "../util/hash";
+import type { CatalogueLookup } from "./validate";
 
 const STILL_SEC = 2.5; // how long a still image holds in a cut
 
