@@ -12,6 +12,8 @@ import { loadCatalogue } from "../src/core/ingest/persist.js";
 import { getProviders } from "../src/core/providers/index.js";
 import { buildIndex, getStore } from "../src/core/index/embed.js";
 import { retrieve } from "../src/core/retrieve/retrieve.js";
+import { orchestrate } from "../src/core/orchestrate/orchestrate.js";
+import { writeFileSync } from "node:fs";
 
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -25,14 +27,37 @@ async function main() {
     case "search":
       return cmdSearch(rest);
     case "plan":
+      return cmdPlan(rest);
     case "render":
-      console.error(`'${cmd}' lands in a later phase (orchestrate/compile).`);
+      console.error("'render' lands in Phase 4 (compile).");
       process.exit(2);
       break;
     default:
       console.error("usage: co <ingest|list|index|search|plan|render> [args]");
       process.exit(2);
   }
+}
+
+async function cmdPlan(args: string[]) {
+  // co plan [highlights|assembly] [query...] [--aspect 9:16] [--max 30] [--asset <id>] [--out edl.json] [--feedback "..."]
+  const mode = args[0] === "assembly" ? "assembly" : "highlights";
+  const opt = (name: string) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
+  const flags = new Set(["--aspect", "--max", "--asset", "--out", "--feedback"]);
+  const query = args.slice(1).filter((a, i, arr) => !a.startsWith("--") && !flags.has(arr[i - 1])).join(" ");
+  const intent = {
+    mode,
+    query,
+    aspect: (opt("--aspect") as "9:16" | "1:1" | "16:9") || "9:16",
+    maxDurationSec: opt("--max") ? Number(opt("--max")) : 30,
+    assetId: opt("--asset"),
+    feedback: opt("--feedback"),
+  };
+  const { edl, candidateCount, planner } = await orchestrate(intent);
+  console.log(`planner=${planner}  candidates=${candidateCount}  clips=${edl.clips.length}  target=${edl.target.aspect} ${edl.target.width}x${edl.target.height}`);
+  console.log(`rationale: ${edl.rationale}`);
+  const out = opt("--out");
+  if (out) { writeFileSync(out, JSON.stringify(edl, null, 2)); console.log(`wrote ${out}`); }
+  else console.log(JSON.stringify(edl, null, 2));
 }
 
 async function cmdIndex() {
