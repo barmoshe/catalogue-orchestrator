@@ -10,6 +10,8 @@
 import { ingestDir } from "../src/core/ingest/ingest.js";
 import { loadCatalogue } from "../src/core/ingest/persist.js";
 import { getProviders } from "../src/core/providers/index.js";
+import { buildIndex, getStore } from "../src/core/index/embed.js";
+import { retrieve } from "../src/core/retrieve/retrieve.js";
 
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -18,14 +20,38 @@ async function main() {
       return cmdIngest(rest);
     case "list":
       return cmdList();
+    case "index":
+      return cmdIndex();
+    case "search":
+      return cmdSearch(rest);
     case "plan":
     case "render":
       console.error(`'${cmd}' lands in a later phase (orchestrate/compile).`);
       process.exit(2);
       break;
     default:
-      console.error("usage: co <ingest|list|plan|render> [args]");
+      console.error("usage: co <ingest|list|index|search|plan|render> [args]");
       process.exit(2);
+  }
+}
+
+async function cmdIndex() {
+  const providers = getProviders();
+  console.log(`embeddings: ${providers.selected.embeddings}`);
+  const n = await buildIndex({ providers });
+  console.log(`indexed ${n} segments`);
+}
+
+async function cmdSearch(args: string[]) {
+  const query = args.filter((a) => !a.startsWith("--")).join(" ");
+  if (!query) { console.error("usage: co search <query>"); process.exit(2); }
+  const store = getStore();
+  if ((await store.size()) === 0) { console.error("index empty — run `co index` first."); process.exit(2); }
+  const results = await retrieve({ query, k: 8, store });
+  console.log(`top ${results.length} for "${query}":`);
+  for (const r of results) {
+    const s = r.segment;
+    console.log(`  ${r.score.toFixed(4)}  ${s.id.slice(0, 10)}…  ${s.startSec.toFixed(1)}-${s.endSec.toFixed(1)}s  ${JSON.stringify(s.tags)}  ${(s.caption ?? s.transcript ?? "").slice(0, 50)}`);
   }
 }
 
