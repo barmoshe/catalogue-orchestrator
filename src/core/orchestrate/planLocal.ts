@@ -38,10 +38,12 @@ export function planLocal(candidates: ScoredSegment[], intent: Intent, lookup: C
     const assetDur = asset?.durationSec ?? null;
     const isStill = assetDur === null;
 
-    const sourceIn = isStill ? 0 : Math.max(0, seg.startSec);
-    const want = isStill ? STILL_SEC : Math.min(seg.endSec, seg.startSec + perClip);
-    let sourceOut = isStill ? STILL_SEC : Math.min(want, assetDur ?? want);
-    if (sourceOut - sourceIn < 0.3) sourceOut = sourceIn + Math.min(0.6, perClip); // floor a usable length
+    // Clamp LAST: keep sourceIn inside the asset, then clamp sourceOut to the asset
+    // duration. A segment with no usable >=0.3s window is skipped (never stretched past
+    // the asset, which would fail validateEdl and break the whole render).
+    const sourceIn = isStill ? 0 : Math.max(0, Math.min(seg.startSec, (assetDur ?? 0) - 0.3));
+    const sourceOut = isStill ? STILL_SEC : Math.min(seg.endSec, sourceIn + perClip, assetDur ?? Infinity);
+    if (!isStill && sourceOut - sourceIn < 0.3) continue;
     const clipDur = sourceOut - sourceIn;
     if (total + clipDur > maxDur + 0.5 && clips.length > 0) break;
 
@@ -84,20 +86,11 @@ export function planLocal(candidates: ScoredSegment[], intent: Intent, lookup: C
 
 function fallbackClip(ranked: ScoredSegment[], lookup: CatalogueLookup): EdlClip {
   const seg = ranked[0]?.segment;
-  const asset = seg ? lookup.asset(seg.assetId) : undefined;
-  const dur = asset?.durationSec ?? null;
-  const sourceIn = seg ? Math.max(0, seg.startSec) : 0;
-  const sourceOut = dur === null ? STILL_SEC : Math.min(seg ? seg.endSec : 2, dur);
-  return {
-    segmentId: seg?.id ?? "",
-    sourceIn,
-    sourceOut: Math.max(sourceIn + 0.6, sourceOut),
-    layout: "fit",
-    transitionIn: "cut",
-    transitionDurSec: 0,
-    captions: [],
-    speedMultiplier: 1,
-  };
+  if (!seg) throw new Error("planLocal: no candidates to build an EDL from");
+  const dur = lookup.asset(seg.assetId)?.durationSec ?? null;
+  const sourceIn = dur === null ? 0 : Math.max(0, Math.min(seg.startSec, dur - 0.3));
+  const sourceOut = dur === null ? STILL_SEC : Math.min(Math.max(seg.endSec, sourceIn + 0.6), dur);
+  return { segmentId: seg.id, sourceIn, sourceOut, layout: "fit", transitionIn: "cut", transitionDurSec: 0, captions: [], speedMultiplier: 1 };
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));

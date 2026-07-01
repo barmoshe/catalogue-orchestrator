@@ -13,6 +13,12 @@ export type RunOptions = {
   totalSec?: number;
   /** Register the child so it can be killed (cancellation). */
   onChild?: (child: ReturnType<typeof spawn>) => void;
+  /**
+   * Keep the FULL stderr instead of the last 64KB. Required for analysis passes whose
+   * results we PARSE from stderr (scene `metadata=print`, `volumedetect`) — truncation
+   * would silently drop early scene cuts on long videos.
+   */
+  keepFullStderr?: boolean;
 };
 
 /**
@@ -38,7 +44,7 @@ export function run(
     child.stderr.on("data", (d) => {
       const s = d.toString();
       stderr += s;
-      if (stderr.length > tailMax) stderr = stderr.slice(-tailMax);
+      if (!opts.keepFullStderr && stderr.length > tailMax) stderr = stderr.slice(-tailMax);
       if (opts.onProgress && opts.totalSec && opts.totalSec > 0) {
         const m = /time=(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(s);
         if (m) {

@@ -44,11 +44,13 @@ async function detectCuts(path: string): Promise<Cut[]> {
     "-f",
     "null",
     "-",
-  ]);
+  ], { keepFullStderr: true });
   const text = stderr + "\n" + stdout;
   const cuts: Cut[] = [];
-  // metadata=print emits pairs: `pts_time:NN.NN` then `lavfi.scene_score=0.xx`
-  const re = /pts_time:([0-9.]+)[\s\S]*?scene_score=([0-9.]+)/g;
+  // metadata=print emits pairs: `pts_time:NN.NN` then `lavfi.scene_score=0.xx`.
+  // The negative lookahead stops a timestamp pairing with a LATER frame's score when a
+  // frame is missing its score line.
+  const re = /pts_time:([0-9.]+)(?:(?!pts_time)[\s\S])*?scene_score=([0-9.]+)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     cuts.push({ t: parseFloat(m[1]), score: clamp01(parseFloat(m[2])) });

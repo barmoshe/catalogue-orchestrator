@@ -1,10 +1,12 @@
 import { getJob } from "@/core/jobs/store";
+import { recoverPending } from "@/core/jobs/worker";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Poll a render job's status. */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  await recoverPending();
   const { id } = await params;
   const job = await getJob(id);
   if (!job) return Response.json({ error: "not found" }, { status: 404 });

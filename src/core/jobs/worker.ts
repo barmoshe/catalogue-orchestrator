@@ -2,15 +2,32 @@ import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import type { EDL } from "../schema/edl";
 import { compileEdl, runtimeDir } from "../compile/compile";
-import { getJob, patchJob, putJob, nowIso, type JobRecord } from "./store";
+import { getJob, listJobs, patchJob, putJob, nowIso, type JobRecord } from "./store";
 
 // Single in-process render worker: a queue drained one job at a time (renders are
 // serialized by the compiler's own lock too). Enqueue returns immediately with a job id;
 // the UI polls /api/jobs/[id]. No external queue — local-first.
 const queue: string[] = [];
 let draining = false;
+let recovered = false;
+
+/**
+ * Boot-time crash recovery: a render interrupted by a restart is left `processing` (or
+ * `queued`) in jobs.json but not in the in-memory queue. Reset stuck `processing` back to
+ * `queued` and re-enqueue everything pending so it actually runs. Idempotent.
+ */
+export async function recoverPending(): Promise<void> {
+  if (recovered) return;
+  recovered = true;
+  for (const j of await listJobs()) {
+    if (j.status === "processing") await patchJob(j.id, { status: "queued", stage: "requeued", progress: 0 });
+    if ((j.status === "queued" || j.status === "processing") && !queue.includes(j.id)) queue.push(j.id);
+  }
+  if (queue.length) scheduleDrain();
+}
 
 export async function enqueueRender(edl: EDL): Promise<JobRecord> {
+  await recoverPending();
   const id = randomUUID();
   const rec: JobRecord = {
     id,

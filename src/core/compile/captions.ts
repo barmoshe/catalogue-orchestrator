@@ -37,12 +37,14 @@ export function buildAss(captions: EdlCaption[], w: number, h: number, fontName 
 }
 
 function toAssTime(sec: number): string {
-  const s = Math.max(0, sec);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const rest = s % 60;
-  const cs = Math.round((rest - Math.floor(rest)) * 100);
-  return `${h}:${String(m).padStart(2, "0")}:${String(Math.floor(rest)).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+  // Work in integer centiseconds so a .995+ fraction carries into the next second
+  // instead of emitting an out-of-range ".100" that libass mistimes/drops.
+  let cs = Math.max(0, Math.round(sec * 100));
+  const h = Math.floor(cs / 360000); cs -= h * 360000;
+  const m = Math.floor(cs / 6000); cs -= m * 6000;
+  const s = Math.floor(cs / 100); cs -= s * 100;
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  return `${h}:${p2(m)}:${p2(s)}.${p2(cs)}`;
 }
 
 function assText(t: string): string {

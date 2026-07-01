@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { SegmentCard } from "../schema/cards";
@@ -29,8 +29,14 @@ export class LocalVectorStore implements VectorStore {
   private async load(): Promise<void> {
     if (this.loaded) return;
     if (existsSync(this.path)) {
-      const parsed = IndexFile.parse(JSON.parse(await readFile(this.path, "utf8")));
-      this.items = parsed.items;
+      try {
+        const parsed = IndexFile.parse(JSON.parse(await readFile(this.path, "utf8")));
+        this.items = parsed.items;
+      } catch {
+        // A truncated/corrupt index must not brick every search — start empty and let
+        // the next `co index` rebuild it rather than throwing on every call.
+        this.items = [];
+      }
     }
     this.loaded = true;
   }
@@ -38,7 +44,10 @@ export class LocalVectorStore implements VectorStore {
   private async persist(): Promise<void> {
     await mkdir(dirname(this.path), { recursive: true });
     const dim = this.items[0]?.vector.length ?? 0;
-    await writeFile(this.path, JSON.stringify({ dim, items: this.items }, null, 2), "utf8");
+    // Atomic write: a crash mid-write can't truncate the live index.
+    const tmp = `${this.path}.tmp`;
+    await writeFile(tmp, JSON.stringify({ dim, items: this.items }, null, 2), "utf8");
+    await rename(tmp, this.path);
   }
 
   async upsert(items: Array<{ segment: SegmentCard; vector: number[] }>): Promise<void> {

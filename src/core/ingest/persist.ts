@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile, readdir, rename } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, isAbsolute, resolve } from "node:path";
 import { AssetCard, SegmentCard, type Catalogue } from "../schema/cards";
@@ -30,7 +30,11 @@ export function hasEntry(hash: string, env?: NodeJS.ProcessEnv): boolean {
 export async function writeEntry(entry: StoredEntry, env?: NodeJS.ProcessEnv): Promise<void> {
   await mkdir(cardsDir(env), { recursive: true });
   const json = JSON.stringify(StoredEntry.parse(entry), null, 2);
-  await writeFile(cardPath(entry.asset.id, env), json, "utf8");
+  // Atomic: a cancelled/crashed ingest can't leave a half-written card that breaks load.
+  const dest = cardPath(entry.asset.id, env);
+  const tmp = `${dest}.tmp`;
+  await writeFile(tmp, json, "utf8");
+  await rename(tmp, dest);
 }
 
 export async function readEntry(hash: string, env?: NodeJS.ProcessEnv): Promise<StoredEntry | null> {
@@ -47,9 +51,14 @@ export async function loadCatalogue(env?: NodeJS.ProcessEnv): Promise<Catalogue>
   const assets = [];
   const segments = [];
   for (const f of files) {
-    const entry = StoredEntry.parse(JSON.parse(await readFile(join(dir, f), "utf8")));
-    assets.push(entry.asset);
-    segments.push(...entry.segments);
+    try {
+      const entry = StoredEntry.parse(JSON.parse(await readFile(join(dir, f), "utf8")));
+      assets.push(entry.asset);
+      segments.push(...entry.segments);
+    } catch {
+      // Skip a single corrupt/half-written card rather than failing the whole catalogue.
+      console.warn(`[catalogue] skipping unreadable card: ${f}`);
+    }
   }
   return { assets, segments };
 }

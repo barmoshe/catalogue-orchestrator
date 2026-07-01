@@ -29,7 +29,7 @@ export async function measureAudioEnergy(path: string, hasAudio: boolean): Promi
     "-f",
     "null",
     "-",
-  ]);
+  ], { keepFullStderr: true });
   const m = /mean_volume:\s*(-?[0-9.]+) dB/.exec(stderr);
   if (!m) return 0;
   const db = parseFloat(m[1]);
