@@ -56,10 +56,18 @@ export function validateEdl(raw: unknown, lookup: CatalogueLookup): ValidationRe
     if (dur !== null && clip.sourceOut > dur + 0.05) {
       return { ok: false, error: `clips[${i}]: sourceOut (${clip.sourceOut}) exceeds asset duration (${dur})` };
     }
+    const clipDur = clip.sourceOut - clip.sourceIn;
+    for (let c = 0; c < clip.captions.length; c += 1) {
+      const cap = clip.captions[c];
+      if (cap.endSec > clipDur + 0.05) {
+        return { ok: false, error: `clips[${i}].captions[${c}]: endSec (${cap.endSec}) exceeds the clip's own duration (${clipDur.toFixed(2)})` };
+      }
+    }
   }
   if (edl.music) {
     const m = lookup.asset(edl.music.assetId);
     if (!m) return { ok: false, error: `music.assetId "${edl.music.assetId}" does not exist in the catalogue` };
+    if (m.kind !== "audio") return { ok: false, error: `music.assetId "${edl.music.assetId}" is a ${m.kind} asset, not audio` };
   }
   return { ok: true, edl };
 }

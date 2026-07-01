@@ -2,7 +2,6 @@ import type { SegmentCard } from "../schema/cards";
 
 /** Cheap, exact pre-filters so retrieval returns candidates that are USABLE in the cut. */
 export type StructuredFilter = {
-  kind?: Array<"video" | "image" | "audio">;
   /** require speech (speechRatio above a threshold) — e.g. for a talking-head clip */
   hasSpeech?: boolean;
   minDurationSec?: number;
@@ -36,8 +35,8 @@ export function passesFilter(s: SegmentCard, f: StructuredFilter): boolean {
   if (f.minDurationSec !== undefined && dur < f.minDurationSec) return false;
   if (f.maxDurationSec !== undefined && dur > f.maxDurationSec) return false;
   if (f.minSalience !== undefined && s.salience < f.minSalience) return false;
-  // kind lives on the asset, not the segment; callers that need a kind filter resolve it
-  // by passing assetId or pre-filtering. Kept here for interface completeness.
+  // Note: asset kind isn't a segment field — kind filtering is done post-retrieval via
+  // the catalogue lookup (see orchestrate), so it's deliberately not a StructuredFilter.
   return true;
 }
 
@@ -46,7 +45,8 @@ export function cosine(a: number[], b: number[]): number {
   const n = Math.min(a.length, b.length);
   for (let i = 0; i < n; i += 1) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
   const denom = Math.sqrt(na) * Math.sqrt(nb);
-  return denom > 0 ? dot / denom : 0;
+  const score = denom > 0 ? dot / denom : 0;
+  return Number.isFinite(score) ? score : 0; // NaN/Inf vectors must not poison the sort
 }
 
 /**
@@ -58,7 +58,7 @@ export function reciprocalRankFusion(lists: ScoredSegment[][], k: number, c = 60
   for (const list of lists) {
     list.forEach((item, rank) => {
       const cur = acc.get(item.segment.id);
-      const add = 1 / (c + rank);
+      const add = 1 / (c + rank + 1); // canonical RRF ranks from 1; also safe when c=0
       if (cur) cur.score += add;
       else acc.set(item.segment.id, { segment: item.segment, score: add });
     });

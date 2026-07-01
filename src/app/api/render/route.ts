@@ -12,6 +12,7 @@ export async function POST(req: Request) {
     const job = await enqueueRender(edl);
     return Response.json({ jobId: job.id, status: job.status });
   } catch (err) {
+    console.error("[/api/render]", err);
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

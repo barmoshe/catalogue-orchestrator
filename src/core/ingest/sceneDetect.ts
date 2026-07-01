@@ -82,6 +82,13 @@ function mergeShort(ws: Window[]): Window[] {
       out.push({ ...w });
     }
   }
+  // A short FIRST window has no `prev` to merge backward into, so it survives the loop
+  // above unmerged. Merge it forward into what is now out[1] instead.
+  if (out.length > 1 && out[0].endSec - out[0].startSec < MIN_SEG) {
+    out[1].startSec = out[0].startSec;
+    out[1].motion = Math.max(out[0].motion, out[1].motion);
+    out.shift();
+  }
   return out;
 }
 

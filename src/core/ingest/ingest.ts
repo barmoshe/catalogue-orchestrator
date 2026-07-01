@@ -59,11 +59,13 @@ export async function ingestFile(path: string, opts: IngestOptions = {}): Promis
     const tech = await probe(path);
     const kfDir = keyframeDir(env);
 
-    // 1) windows (the retrieval units)
+    // 1) windows (the retrieval units). Non-video (or unprobed) assets get one window;
+    // a still image has no duration, so give it a small nominal length (avoids a
+    // degenerate [0,0] window that would divide-by-~0 in signal derivation).
     const windows: Window[] =
       tech.kind === "video" && tech.durationSec
         ? await sceneDetect(path, tech.durationSec)
-        : [{ startSec: 0, endSec: tech.durationSec ?? 0, motion: 0.2 }];
+        : [{ startSec: 0, endSec: tech.durationSec ?? 2.5, motion: 0.2 }];
 
     // 2) transcript (real Whisper when keyed; local tier returns empty)
     let transcript: TranscriptSegment[] = [];
@@ -154,8 +156,10 @@ async function listMedia(dir: string): Promise<string[]> {
 }
 
 function windowTranscript(segs: TranscriptSegment[], a: number, b: number): string {
+  // Assign each transcript segment to exactly ONE window by its midpoint, so a line that
+  // straddles a scene boundary isn't double-counted into both windows' embedding text.
   return segs
-    .filter((s) => s.end > a && s.start < b)
+    .filter((s) => { const mid = (s.start + s.end) / 2; return mid >= a && mid < b; })
     .map((s) => s.text)
     .join(" ")
     .trim();

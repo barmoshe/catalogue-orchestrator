@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
@@ -52,7 +52,12 @@ async function ensureLoaded(): Promise<void> {
 async function persist(): Promise<void> {
   await mkdir(runtimeDir(), { recursive: true });
   const jobs = [...store.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  await writeFile(jobsPath(), JSON.stringify({ jobs }, null, 2), "utf8").catch(() => {});
+  // Atomic tmp+rename so a crash mid-write can't corrupt jobs.json (whose corruption
+  // would otherwise wipe all history on next load). Errors surface, not swallowed.
+  const p = jobsPath();
+  const tmp = `${p}.tmp`;
+  await writeFile(tmp, JSON.stringify({ jobs }, null, 2), "utf8");
+  await rename(tmp, p);
 }
 
 export async function putJob(rec: JobRecord): Promise<void> {

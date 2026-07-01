@@ -10,6 +10,9 @@ export async function POST(req: Request) {
     const { edl, planner, candidateCount } = await orchestrate(body);
     return Response.json({ edl, planner, candidateCount });
   } catch (err) {
+    console.error("[/api/plan]", err);
+    // Local-first tool: the message goes to the local operator. For a hosted deploy,
+    // genericize this (it can carry zod/ffmpeg internals).
     return Response.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

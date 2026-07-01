@@ -20,7 +20,7 @@ export async function sampleFrames(
   for (let i = 0; i < windows.length; i += 1) {
     const w = windows[i];
     const mid = w.startSec + (w.endSec - w.startSec) / 2;
-    const dest = join(keyframeDir, `${assetId.slice(0, 12)}-${i}.jpg`);
+    const dest = join(keyframeDir, `${assetId}-${i}.jpg`);
     const res = await run(ffmpegPath(), [
       "-hide_banner",
       "-ss",
@@ -46,7 +46,7 @@ export async function sampleOne(
   keyframeDir: string,
 ): Promise<string | null> {
   await mkdir(keyframeDir, { recursive: true });
-  const dest = join(keyframeDir, `${assetId.slice(0, 12)}-0.jpg`);
+  const dest = join(keyframeDir, `${assetId}-0.jpg`);
   const res = await run(ffmpegPath(), [
     "-hide_banner",
     "-i",

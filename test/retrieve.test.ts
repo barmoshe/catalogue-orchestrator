@@ -3,7 +3,7 @@ import type { SegmentCard } from "../src/core/schema/cards";
 import { LocalEmbeddings } from "../src/core/providers/embeddings/local";
 import { LocalVectorStore } from "../src/core/index/localStore";
 import { retrieve } from "../src/core/retrieve/retrieve";
-import { reciprocalRankFusion, passesFilter } from "../src/core/index/store";
+import { reciprocalRankFusion, passesFilter, cosine } from "../src/core/index/store";
 
 function seg(id: string, text: string, over: Partial<SegmentCard> = {}): SegmentCard {
   return {
@@ -63,6 +63,18 @@ describe("store helpers", () => {
     const fused = reciprocalRankFusion([A, B], 10);
     expect(fused.length).toBe(2);
     expect(new Set(fused.map((f) => f.segment.id)).size).toBe(2);
+  });
+
+  it("reciprocalRankFusion stays finite at c=0 (regression)", () => {
+    const A = [{ segment: SEGMENTS[0], score: 1 }];
+    const fused = reciprocalRankFusion([A], 10, 0);
+    expect(Number.isFinite(fused[0].score)).toBe(true);
+  });
+
+  it("cosine never returns NaN/Infinity even for degenerate vectors", () => {
+    expect(cosine([0, 0, 0], [1, 2, 3])).toBe(0);
+    expect(Number.isFinite(cosine([NaN, 1], [1, 1]))).toBe(true);
+    expect(Number.isFinite(cosine([Infinity, 1], [1, 1]))).toBe(true);
   });
 });
 

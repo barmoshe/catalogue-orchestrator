@@ -47,8 +47,9 @@ export function planLocal(candidates: ScoredSegment[], intent: Intent, lookup: C
     const clipDur = sourceOut - sourceIn;
     if (total + clipDur > maxDur + 0.5 && clips.length > 0) break;
 
+    // endSec must never exceed the clip's own duration (validateEdl enforces this).
     const captions: EdlCaption[] = seg.transcript
-      ? [{ text: truncate(seg.transcript, 90), startSec: 0, endSec: Math.max(1, clipDur - 0.2), style: "lower-third" }]
+      ? [{ text: truncate(seg.transcript, 90), startSec: 0, endSec: Math.min(clipDur, Math.max(1, clipDur - 0.2)), style: "lower-third" }]
       : [];
 
     clips.push({
