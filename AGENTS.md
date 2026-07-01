@@ -25,14 +25,25 @@ contradict memory, ffmpeg is right.
 4. **Aspect fit = scale + pad/crop, never stretch.** `fit` = decrease + pad; `fill` =
    increase + crop; `blurpad` = blurred cover behind a contained foreground. Always
    `setsar=1`.
-5. **Captions via PNG overlays.** Caption text is rendered to transparent PNGs and
-   composited with the `overlay` filter (`enable='between(t,a,b)'`) — build-independent
-   (the system ffmpeg here lacks `drawtext`; the bundled ffmpeg-static 6.1.1 has libass +
-   libfreetype as a fallback, but overlay is the contract).
+5. **Captions via libass/ASS, never `drawtext`.** The bundled `ffmpeg-static` (6.1.1) has
+   libass but NOT the `drawtext` filter. `src/core/compile/captions.ts` builds a per-clip
+   `.ass` file; `filters.ts`'s `subtitlesChain` applies it with the `subtitles` filter. A
+   libre font is bundled at `assets/fonts/caption.ttf` (Liberation Sans, SIL OFL) so
+   rendering is reproducible without a system-font dependency. See `decisions/0002`.
 6. **Keys in `.env` only.** Never in a commit, artifact, or doc. The `local` provider tier
    keeps the whole pipeline runnable with no keys.
 7. **Idempotent + cached.** Cards key off a content hash; re-ingest is a cache hit.
-   Renders run one at a time behind a lock, in a unique temp dir, cleaned up after.
+   Renders run one at a time behind an in-process lock (`src/core/compile/run.ts`), in a
+   unique temp dir, cleaned up after.
+8. **Writes that other reads depend on must be atomic (tmp file + rename).** Applies to
+   catalogue cards (`ingest/persist.ts`), the vector index (`index/localStore.ts`), and
+   `jobs.json` (`jobs/store.ts`) — a crash mid-write must not corrupt state that the next
+   read depends on. A single corrupt catalogue card is skipped (with a warning), not fatal
+   to the whole catalogue load.
+9. **No `.js` extensions on relative TS imports.** Turbopack won't resolve a `.js`
+   specifier pointing at a `.ts` file when bundling `core/*` into the Next API routes,
+   even though tsx/tsc/vitest tolerate it. Keep relative imports extensionless
+   (`from "../schema/edl"`, not `"../schema/edl.js"`).
 
 ## Provider tiers
 
@@ -44,10 +55,11 @@ Tests and CI run on `local`.
 
 ## Stack
 
-Next 16 (App Router, Turbopack) + React 19 + TS, `@/*` → `src/*`. Vitest (node env for
-core; jsdom per-file for UI). Electron desktop shell (`electron/main.cjs`) runs the Next
-`standalone` server as a managed child — the ffmpeg binaries + LanceDB native addon are
-`asarUnpack`ed (they can't execute inside asar).
+Next 16 (App Router, Turbopack) + React 19 + TS, `@/*` → `src/*`. Vitest (node env). Zero
+native-module dependencies — the vector store is dependency-free JSON+cosine (see
+`decisions/0003`), not LanceDB. Electron desktop shell (`electron/main.cjs`) runs the Next
+`standalone` server as a managed child — the ffmpeg binaries are `asarUnpack`ed (they
+can't execute inside asar).
 
 ## Gates before "done"
 

@@ -2,9 +2,8 @@
 //
 // Packaging discipline for this app's binary deps:
 //   - ffmpeg-static / ffprobe-static ship platform binaries that CANNOT execute from
-//     inside an asar archive, and @lancedb/lancedb ships a native .node addon.
-//     `asar.unpack` keeps them on disk as app.asar.unpacked/...; electron/main.cjs
-//     rewrites the resolved paths accordingly.
+//     inside an asar archive. `asar.unpack` keeps them on disk as
+//     app.asar.unpacked/...; electron/main.cjs rewrites the resolved paths accordingly.
 //   - The Next `standalone` server + its static assets are unpacked too, so the
 //     managed Node child can read them at runtime.
 //
@@ -13,7 +12,7 @@
 // runtime (`npm run dev` + `npm run electron:dev`) works without any of that.
 
 const UNPACK_GLOB =
-  "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/node_modules/@lancedb/**,**/.next/standalone/**,**/.next/static/**}";
+  "{**/node_modules/ffmpeg-static/**,**/node_modules/ffprobe-static/**,**/.next/standalone/**,**/.next/static/**}";
 
 module.exports = {
   packagerConfig: {

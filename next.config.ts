@@ -12,15 +12,10 @@ const nextConfig: NextConfig = {
   // .next/standalone/server.js (not nested under a detected workspace root — there
   // are many sibling repos under the parent dir).
   outputFileTracingRoot: projectRoot,
-  // ffmpeg-static / ffprobe-static / lancedb are native + binary deps; never bundle
-  // them into the server build. They are resolved from node_modules at runtime
-  // (and from app.asar.unpacked when packaged inside Electron — see electron/main.cjs).
-  serverExternalPackages: [
-    "ffmpeg-static",
-    "ffprobe-static",
-    "@lancedb/lancedb",
-    "proper-lockfile",
-  ],
+  // ffmpeg-static / ffprobe-static ship platform binaries; never bundle them into the
+  // server build. They are resolved from node_modules at runtime (and from
+  // app.asar.unpacked when packaged inside Electron — see electron/main.cjs).
+  serverExternalPackages: ["ffmpeg-static", "ffprobe-static"],
 };
 
 export default nextConfig;
